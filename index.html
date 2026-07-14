@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financiero — Elizabeth Cegarra</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #F7F8FA;
+    --surface:   #FFFFFF;
+    --border:    #E4E7ED;
+    --border2:   #C9CFD8;
+    --text:      #1A1D23;
+    --text2:     #5A6272;
+    --text3:     #9BA3B0;
+    --green:     #16A05C;
+    --green-bg:  #EAF7F0;
+    --green-bdr: #A8DFC3;
+    --red:       #D93025;
+    --red-bg:    #FDECEA;
+    --red-bdr:   #F5B8B4;
+    --amber:     #C07800;
+    --amber-bg:  #FEF3DC;
+    --amber-bdr: #F5D68A;
+    --blue:      #1565C0;
+    --blue-bg:   #E8F0FE;
+    --blue-bdr:  #A8C4F5;
+    --accent:    #E24B4A;
+    --accent2:   #FF7043;
+    --radius:    10px;
+    --shadow:    0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.04);
+  }
+  html { font-size: 14px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 1.25rem;
+    display: flex; align-items: center; gap: 1rem;
+    height: 52px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 0.5rem; }
+  .topbar-brand .logo {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .topbar-brand h1 { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
+  .topbar-brand p  { font-size: 11px; color: var(--text2); white-space: nowrap; }
+
+  /* ── EDITAR DATOS BUTTON ── */
+  .btn-edit {
+    margin-left: 0; /* stays leftish after brand */
+    padding: 5px 13px;
+    border-radius: 20px;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+  }
+  .btn-edit:hover { background: var(--accent); color: #fff; }
+
+  .topbar-spacer { flex: 1; }
+  .topbar-date { font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+  /* ── MODAL EDITAR DATOS ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(2px);
+    align-items: flex-start; justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 16px;
+    width: 100%; max-width: 560px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg);
+  }
+  .modal-header h2 { font-size: 14px; font-weight: 700; }
+  .modal-header p  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: none; background: var(--border); color: var(--text2);
+    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-body { padding: 1.1rem 1.4rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .modal-section-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text3);
+    margin-top: 0.5rem; margin-bottom: 0.2rem;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  .field-row {
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .field-row label { font-size: 12px; color: var(--text2); min-width: 185px; flex-shrink: 0; }
+  .field-row input[type=number] {
+    flex: 1; padding: 6px 10px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    color: var(--text); background: var(--bg);
+    transition: border-color .15s;
+    -moz-appearance: textfield;
+  }
+  .field-row input[type=number]::-webkit-outer-spin-button,
+  .field-row input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field-row input[type=number]:focus { outline: none; border-color: var(--accent); background: #fff; }
+  .field-row .unit { font-size: 11px; color: var(--text3); min-width: 30px; }
+  .modal-footer {
+    padding: 1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 0.6rem; justify-content: flex-end;
+    background: var(--bg);
+  }
+  .btn-cancel { padding: 7px 18px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; cursor: pointer; color: var(--text2); }
+  .btn-apply  { padding: 7px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-apply:hover { background: #c93f3e; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .tab {
+    padding: 6px 15px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text2);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all .15s;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--accent); }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.85rem 1rem;
+    box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--border2);
+  }
+  .kpi.g::before { background: var(--green); }
+  .kpi.r::before { background: var(--red); }
+  .kpi.w::before { background: var(--amber); }
+  .kpi.b::before { background: var(--blue); }
+  .kpi label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); display: block; margin-bottom: 5px; }
+  .kpi .val { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi.g .val { color: var(--green); }
+  .kpi.r .val { color: var(--red); }
+  .kpi.w .val { color: var(--amber); }
+  .kpi.b .val { color: var(--blue); }
+  .kpi .sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  /* ── CARD / SECTION ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.15rem;
+    box-shadow: var(--shadow); margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text3);
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-title span { font-size: 14px; }
+
+  /* ── SEMÁFOROS / ALERTS ── */
+  .alert {
+    border-radius: 8px; padding: 0.65rem 1rem;
+    font-size: 12px; line-height: 1.55;
+    margin-bottom: 0.85rem;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .alert .ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert.ok  { background: var(--green-bg); border: 1px solid var(--green-bdr); color: #0D4A2A; }
+  .alert.w   { background: var(--amber-bg); border: 1px solid var(--amber-bdr); color: #5C3800; }
+  .alert.r   { background: var(--red-bg);   border: 1px solid var(--red-bdr);   color: #5C1210; }
+  .alert.b   { background: var(--blue-bg);  border: 1px solid var(--blue-bdr);  color: #0D3070; }
+
+  /* ── TABLE ── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    padding: 6px 6px; text-align: right; font-weight: 700;
+    color: var(--text3); border-bottom: 1.5px solid var(--border);
+    font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody td {
+    padding: 6px 6px; border-bottom: 1px solid var(--border);
+    text-align: right; color: var(--text2);
+  }
+  tbody td:first-child { text-align: left; color: var(--text); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.total-row td { font-weight: 700; border-top: 2px solid var(--border2); border-bottom: none; color: var(--text); font-size: 13px; }
+  tfoot td { padding: 7px 6px; font-weight: 700; border-top: 2px solid var(--border2); text-align: right; font-size: 13px; }
+  tfoot td:first-child { text-align: left; }
+  .num-g { color: var(--green) !important; font-weight: 600; }
+  .num-r { color: var(--red) !important; font-weight: 600; }
+  .num-w { color: var(--amber) !important; font-weight: 600; }
+  .num-b { color: var(--blue) !important; font-weight: 600; }
+
+  /* ── PILLS ── */
+  .pill { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  .pill-g { background: var(--green-bg); color: var(--green); }
+  .pill-w { background: var(--amber-bg); color: var(--amber); }
+  .pill-r { background: var(--red-bg); color: var(--red); }
+  .pill-b { background: var(--blue-bg); color: var(--blue); }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  .legend span { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+  .line-dash { width: 18px; height: 2px; border-top: 2px dashed; display: inline-block; }
+
+  /* ── CHART ── */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* ── SEMÁFORO ROW ── */
+  .sf { display: inline-flex; align-items: center; gap: 3px; }
+  .sf-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* ── GRID 2 COL ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ── HOJA DE RUTA TIMELINE ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item {
+    display: flex; gap: 14px; padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot-col { display: flex; flex-direction: column; align-items: center; padding-top: 2px; }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .tl-body { flex: 1; }
+  .tl-mes { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); }
+  .tl-title { font-size: 13px; font-weight: 600; color: var(--text); margin: 1px 0 2px; }
+  .tl-impact { font-size: 12px; font-weight: 600; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 10px 0 4px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+  .progress-label strong { font-weight: 700; }
+  .progress-track { height: 10px; border-radius: 6px; background: var(--border); overflow: hidden; }
+  .progress-fill  { height: 100%; border-radius: 6px; transition: width .4s ease; }
+  .progress-fill.emergen { background: linear-gradient(90deg, #1565C0, #42A5F5); }
+  .progress-fill.invest  { background: linear-gradient(90deg, #16A05C, #66BB6A); }
+
+  /* ── FONDOS CARDS ── */
+  .fondo-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .fondo-card.emergen { border-top: 4px solid #1565C0; }
+  .fondo-card.invest  { border-top: 4px solid #16A05C; }
+  .fondo-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .fondo-title  { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .fondo-sub    { font-size: 11px; color: var(--text2); }
+  .fondo-badge  { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .fondo-badge.emergen { background: var(--blue-bg); color: var(--blue); }
+  .fondo-badge.invest  { background: var(--green-bg); color: var(--green); }
+  .split-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .split-kpi { flex: 1; background: var(--bg); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .split-kpi label { font-size: 10px; color: var(--text3); display: block; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .split-kpi .sv { font-size: 14px; font-weight: 700; }
+  .split-kpi .sv.b { color: var(--blue); }
+  .split-kpi .sv.g { color: var(--green); }
+  .split-kpi .sv.w { color: var(--amber); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .topbar-date { display: none; }
+    .main { padding: 1rem 0.75rem 3rem; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════ -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo">EC</div>
+    <div>
+      <h1>Dashboard Financiero Personal</h1>
+      <p>Elizabeth Cegarra · CORE FIT + Piñateli</p>
+    </div>
+  </div>
+
+  <!-- BOTÓN EDITAR DATOS — esquina superior izquierda -->
+  <button class="btn-edit" onclick="abrirModal()">
+    ✏️ Actualizar datos
+  </button>
+
+  <div class="topbar-spacer"></div>
+  <div class="topbar-date" id="fecha-hoy"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL EDITAR DATOS
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>✏️ Actualizar datos del dashboard</h2>
+        <p>Modificá los valores y presioná "Aplicar" para recalcular todo.</p>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-section-title">💰 Ingresos mensuales</div>
+      <div class="field-row"><label>Sueldo neto CORE (sin anticipos)</label><input type="number" id="m-sueldo" value="2539455" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Horas extras promedio / mes</label><input type="number" id="m-extras" value="270596" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Guardia pasiva mensual</label><input type="number" id="m-guardia" value="102560" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Ganancia neta Piñateli (variable)</label><input type="number" id="m-pin" value="250000" step="10000"><span class="unit">$</span></div>
+
+      <div class="modal-section-title">🏠 Alquileres</div>
+      <div class="field-row"><label>Alq. propio actual (ajustó jul-26)</label><input type="number" id="m-alq1" value="1144900" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Alq. mamá actual (ajusta ago-26)</label><input type="number" id="m-alq2" value="325000" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>% ajuste ICL trimestral</label><input type="number" id="m-icl" value="8.5" step="0.5"><span class="unit">%</span></div>
+
+      <div class="modal-section-title">🛒 Gastos fijos</div>
+      <div class="field-row"><label>Mercado / comida</label><input type="number" id="m-mercado" value="400000" step="5000"><span class="unit">$</span></div>
+      <div class="field-row"><label>TV + celular + internet</label><input type="number" id="m-serv" value="54000" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Contador Piñateli</label><input type="number" id="m-cont" value="45000" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Autónomo Piñateli</label><input type="number" id="m-auto" value="78000" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Monotributo + IB Piñateli</label><input type="number" id="m-mono" value="65000" step="1000"><span class="unit">$</span></div>
+
+      <div class="modal-section-title">💳 Tarjeta de crédito</div>
+      <div class="field-row"><label>Saldo deuda TDC actual</label><input type="number" id="m-deuda" value="1863340" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Pago mensual TDC</label><input type="number" id="m-ptdc" value="356000" step="5000"><span class="unit">$</span></div>
+      <div class="field-row"><label>TEM mensual TDC</label><input type="number" id="m-tem" value="8.42" step="0.1"><span class="unit">%</span></div>
+
+      <div class="modal-section-title">🛡️ Fondo de emergencia</div>
+      <div class="field-row"><label>Meses de gastos como meta</label><input type="number" id="m-fe-meses" value="3" step="1" min="1" max="6"><span class="unit">meses</span></div>
+      <div class="field-row"><label>% superávit → fondo emergencia</label><input type="number" id="m-fe-pct" value="60" step="5" min="10" max="90"><span class="unit">%</span></div>
+      <div class="field-row"><label>Saldo ya acumulado en el fondo</label><input type="number" id="m-fe-saldo" value="0" step="10000"><span class="unit">$</span></div>
+
+      <div class="modal-section-title">📈 Ahorro / inversión</div>
+      <div class="field-row"><label>Meta de ahorro / inversión</label><input type="number" id="m-meta-inv" value="5000000" step="200000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Rentabilidad anual estimada</label><input type="number" id="m-rent-inv" value="50" step="5"><span class="unit">% TNA</span></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-apply" onclick="aplicarYCerrar()">✅ Aplicar y recalcular</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN
+══════════════════════════════════════ -->
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="ST('resumen')">📊 Resumen</button>
+    <button class="tab" onclick="ST('alquiler')">🏠 Alquileres ICL</button>
+    <button class="tab" onclick="ST('tdc')">💳 TDC</button>
+    <button class="tab" onclick="ST('proy')">📈 Proyección 12M</button>
+    <button class="tab" onclick="ST('emergen')">🛡️ Fondo emergencia</button>
+    <button class="tab" onclick="ST('invest')">📈 Ahorro / inversión</button>
+  </div>
+
+  <!-- ══ TAB RESUMEN ══ -->
+  <div id="pane-resumen" class="pane active">
+    <div class="kpi-grid" id="k-res"></div>
+    <div id="al-res-main"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span>📋</span> Radiografía mensual</div>
+        <table id="tb-radiografia"></table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🥧</span> Distribución del ingreso</div>
+        <div class="legend" id="ley-donut"></div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="cDonut" role="img" aria-label="Distribución presupuestal."></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>⚠️</span> Alertas del mes</div>
+      <div id="alertas-mes"></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB ALQUILER ══ -->
+  <div id="pane-alquiler" class="pane">
+    <div class="kpi-grid" id="k-alq"></div>
+    <div id="al-alq-prox"></div>
+    <div class="card">
+      <div class="card-title"><span>📈</span> Evolución alquileres — 12 meses (puntos rojos = ajuste ICL)</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#1565C0"></span>Alq. propio</span>
+        <span><span class="dot" style="background:#7F77DD"></span>Alq. mamá</span>
+        <span><span class="dot" style="background:#E24B4A"></span>Total combinado</span>
+        <span style="color:#E24B4A;font-size:11px;">● = mes de ajuste ICL</span>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="cAlq" role="img" aria-label="Evolución alquileres ICL."></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📅</span> Calendario de ajustes trimestrales</div>
+      <div class="tbl-wrap"><table id="tb-alq"></table></div>
+    </div>
+    <div id="al-alq-imp"></div>
+  </div>
+
+  <!-- ══ TAB TDC ══ -->
+  <div id="pane-tdc" class="pane">
+    <div class="kpi-grid" id="k-tdc"></div>
+    <div class="card">
+      <div class="card-title"><span>📉</span> Proyección saldo TDC</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#D93025"></span>Saldo deuda</span>
+        <span><span class="dot" style="background:#16A05C"></span>Pagos acumulados</span>
+      </div>
+      <div class="chart-wrap" style="height:210px;">
+        <canvas id="cTDC" role="img" aria-label="Proyección TDC."></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🔓</span> Cuotas activas y liberación de fondos</div>
+      <table id="tb-cuotas"></table>
+    </div>
+    <div class="alert b"><span class="ico">💡</span><span>Desde <strong>noviembre 2026</strong>, al cancelarse la TDC más las cuotas activas (COPPEL, NBA, GARANTIAYA) y el UVA 1, se liberan <strong>~$368.830/mes</strong>. Ese dinero es la base de tu plan de ahorro.</span></div>
+  </div>
+
+  <!-- ══ TAB PROYECCIÓN 12M ══ -->
+  <div id="pane-proy" class="pane">
+    <div class="alert b"><span class="ico">ℹ️</span><span>Sueldo base constante (sin horas extras variables). Piñateli usa el valor ingresado. Alquiler propio ajusta <strong>oct/ene/abr</strong>, mamá ajusta <strong>ago/nov/feb/may</strong>.</span></div>
+    <div class="card">
+      <div class="card-title"><span>📈</span> Curva financiera — ago 2026 a jul 2027</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#D93025"></span>Deuda TDC</span>
+        <span><span class="dot line-dash" style="border-color:#16A05C; background:transparent"></span>Superávit mensual</span>
+        <span><span class="dot" style="background:#1565C0"></span>Ahorro acumulado</span>
+      </div>
+      <div class="chart-wrap" style="height:230px;">
+        <canvas id="cProy" role="img" aria-label="Proyección financiera 12 meses."></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📋</span> Tabla mes a mes completa</div>
+      <div class="tbl-wrap"><div id="tb-proy"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB FONDO EMERGENCIA ══ -->
+  <div id="pane-emergen" class="pane">
+    <div class="alert b"><span class="ico">🛡️</span><span><strong>El fondo de emergencia va primero.</strong> Es plata intocable para catástrofes: enfermedad, pérdida de trabajo, arreglo grande. Meta: 3 meses de tus gastos fijos. Tiene que estar en algo <strong>líquido e inmediato</strong> (cuenta remunerada o FCI Money Market).</span></div>
+
+    <div class="fondo-card emergen" style="margin-bottom:1rem;">
+      <div class="fondo-header">
+        <div>
+          <div class="fondo-title">🛡️ Fondo de Emergencia</div>
+          <div class="fondo-sub">Líquido · FCI Money Market o cuenta remunerada · No invertir</div>
+        </div>
+        <span class="fondo-badge emergen" id="fe-badge">Fase 1</span>
+      </div>
+      <div class="split-row" id="fe-kpis"></div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Progreso hacia la meta</span><strong id="fe-pct-label">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill emergen" id="fe-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;">
+          <span>$0</span><span id="fe-meta-label">Meta: $6.900.000</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> Parámetros del fondo</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text2);">Meta (meses de gastos)</span>
+            <div style="display:flex;gap:6px;">
+              <button onclick="D.meta_fe_meses=Math.max(1,D.meta_fe_meses-1);renderEmergencia()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;">−</button>
+              <span style="font-weight:700;min-width:18px;text-align:center;" id="fe-meses-label">3</span>
+              <button onclick="D.meta_fe_meses=Math.min(6,D.meta_fe_meses+1);renderEmergencia()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;">+</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text2);">% superávit → fondo emergencia</span>
+            <div style="display:flex;gap:6px;">
+              <button onclick="D.pct_fe=Math.max(10,D.pct_fe-5);renderEmergencia()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;">−</button>
+              <span style="font-weight:700;min-width:30px;text-align:center;" id="fe-pct-ctrl">60%</span>
+              <button onclick="D.pct_fe=Math.min(90,D.pct_fe+5);renderEmergencia()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;">+</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+            <span style="color:var(--text2);">Saldo actual en el fondo</span>
+            <span style="font-weight:700;color:var(--blue);" id="fe-saldo-actual-label">$0</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📅</span> Timeline — cuándo completás el fondo</div>
+        <div class="timeline" id="tl-fe"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>📈</span> Acumulación mes a mes</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#1565C0"></span>Fondo emergencia acumulado</span>
+        <span><span style="width:18px;height:2px;background:#42A5F5;display:inline-block;border-top:2px dashed #42A5F5;"></span>Meta</span>
+      </div>
+      <div class="chart-wrap" style="height:195px;">
+        <canvas id="cFE" role="img" aria-label="Curva fondo de emergencia."></canvas>
+      </div>
+    </div>
+
+    <div id="al-fe"></div>
+  </div>
+
+  <!-- ══ TAB AHORRO / INVERSIÓN ══ -->
+  <div id="pane-invest" class="pane">
+    <div class="alert ok"><span class="ico">📈</span><span><strong>El ahorro/inversión arranca DESPUÉS de completar el fondo de emergencia.</strong> Este dinero puede tomar más riesgo y plazo porque no necesitás liquidez inmediata. Opciones: plazo fijo UVA, FCI renta mixta, dólares, CEDEARS.</span></div>
+
+    <div class="fondo-card invest" style="margin-bottom:1rem;">
+      <div class="fondo-header">
+        <div>
+          <div class="fondo-title">📈 Fondo de Ahorro / Inversión</div>
+          <div class="fondo-sub">Plazo fijo UVA · FCI renta mixta · Dólares · CEDEARS</div>
+        </div>
+        <span class="fondo-badge invest" id="inv-badge">Fase 2</span>
+      </div>
+      <div class="split-row" id="inv-kpis"></div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Progreso hacia la meta</span><strong id="inv-pct-label">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill invest" id="inv-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;">
+          <span>$0</span><span id="inv-meta-label">Meta: $5.000.000</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> Parámetros de inversión</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text2);">Meta de ahorro/inversión</span>
+            <input type="number" id="inv-meta-input" value="5000000" step="500000"
+              oninput="D.meta_inv=+this.value;renderInversion()"
+              style="width:120px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;text-align:right;">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text2);">% restante superávit → inversión</span>
+            <span style="font-weight:700;color:var(--green);" id="inv-pct-resto">40%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+            <span style="color:var(--text2);">Rentabilidad anual estimada</span>
+            <div style="display:flex;gap:6px;">
+              <button onclick="D.rent_inv=Math.max(0,D.rent_inv-5);renderInversion()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">−</button>
+              <span style="font-weight:700;min-width:35px;text-align:center;" id="inv-rent-label">50%</span>
+              <button onclick="D.rent_inv=Math.min(200,D.rent_inv+5);renderInversion()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📅</span> Timeline — cuándo alcanzás la meta</div>
+        <div class="timeline" id="tl-inv"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>📈</span> Acumulación mes a mes (con rendimiento)</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#16A05C"></span>Capital propio ahorrado</span>
+        <span><span class="dot" style="background:#A5D6A7"></span>Rendimiento acumulado</span>
+        <span><span style="width:18px;height:2px;background:#66BB6A;display:inline-block;border-top:2px dashed #66BB6A;"></span>Meta</span>
+      </div>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="cINV" role="img" aria-label="Curva de ahorro e inversión."></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🏦</span> Opciones de inversión recomendadas (Argentina 2026)</div>
+      <table>
+        <thead><tr><th>Instrumento</th><th>Liquidez</th><th>Riesgo</th><th>Rendimiento ref.</th><th>Para qué</th></tr></thead>
+        <tbody>
+          <tr><td><strong>FCI Money Market</strong></td><td class="num-g">Inmediata</td><td><span class="pill pill-g">Muy bajo</span></td><td>~65–75% TNA</td><td>Fondo emergencia</td></tr>
+          <tr><td><strong>Cuenta remunerada</strong></td><td class="num-g">Inmediata</td><td><span class="pill pill-g">Muy bajo</span></td><td>~60–70% TNA</td><td>Fondo emergencia</td></tr>
+          <tr><td><strong>Plazo fijo UVA</strong></td><td class="num-w">90 días</td><td><span class="pill pill-g">Bajo</span></td><td>Inflación + 1%</td><td>Ahorro antiinflación</td></tr>
+          <tr><td><strong>FCI renta mixta</strong></td><td class="num-w">48–72hs</td><td><span class="pill pill-w">Medio</span></td><td>~80–120% TNA</td><td>Ahorro/inversión</td></tr>
+          <tr><td><strong>Dólares (MEP/blue)</strong></td><td class="num-w">Variable</td><td><span class="pill pill-w">Medio</span></td><td>Cobertura cambiaria</td><td>Reserva de valor</td></tr>
+          <tr><td><strong>CEDEARS</strong></td><td class="num-w">48–72hs</td><td><span class="pill pill-r">Alto</span></td><td>Variable</td><td>Largo plazo</td></tr>
+        </tbody>
+      </table>
+      <div class="alert b" style="margin-top:10px;"><span class="ico">💡</span><span>Esta tabla es orientativa. Consultá con un asesor financiero para el mix adecuado según tu perfil de riesgo.</span></div>
+    </div>
+
+    <div id="al-inv"></div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════
+// DATOS GLOBALES (sincronizados con el modal)
+// ══════════════════════════════════════════════
+let D = {
+  sueldo:   2539455,
+  extras:   270596,
+  guardia:  102560,
+  pin:      250000,
+  alq1:     1144900,
+  alq2:     325000,
+  icl:      8.5,
+  mercado:  400000,
+  serv:     54000,
+  cont:     45000,
+  auto_:    78000,
+  mono:     65000,
+  deuda:    1863340,
+  ptdc:     356000,
+  tem:      8.42,
+  pct_ahorro: 40,       // legacy (no usado en nuevos tabs)
+  meta:     5000000,    // legacy
+  // Fondo emergencia
+  meta_fe_meses: 3,     // meses de gastos a cubrir
+  pct_fe: 60,           // % del superávit post-deuda → fondo emergencia
+  saldo_fe_actual: 0,   // saldo ya acumulado en el fondo
+  // Ahorro / inversión
+  meta_inv: 5000000,    // meta de ahorro/inversión
+  rent_inv: 50,         // rentabilidad anual estimada %
+};
+
+// Gastos fijos UVA y cuotas
+const UVA1 = 242177, UVA2 = 81045;
+const MESES     = ['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
+const MESES_F   = ['Ago-26','Sep-26','Oct-26','Nov-26','Dic-26','Ene-27','Feb-27','Mar-27','Abr-27','May-27','Jun-27','Jul-27'];
+
+// Ajuste ICL real calibrado:
+// Propio: ajustó jul-26 → próx ajustes oct(2), ene(5), abr(8), jul(11)
+// Mamá:  ajusta ago(0), nov(3), feb(6), may(9)
+const ADJ1 = [2,5,8,11];
+const ADJ2 = [0,3,6,9];
+
+const fmt  = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtP = n => (Math.round(n*10)/10).toFixed(1).replace('.',',') + '%';
+const sign = n => n > 0 ? '+' + fmt(n) : fmt(n);
+
+function alq1(i){ const n=ADJ1.filter(x=>x<=i).length; return Math.round(D.alq1 * Math.pow(1+D.icl/100,n)); }
+function alq2(i){ const n=ADJ2.filter(x=>x<=i).length; return Math.round(D.alq2 * Math.pow(1+D.icl/100,n)); }
+function gfMes(i){
+  const a1=alq1(i), a2=alq2(i);
+  const uva1 = i<3 ? UVA1 : 0;
+  const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + UVA2;
+  return { a1, a2, uva1, total: a1+a2+base+uva1 };
+}
+
+// ══════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════
+const CHARTS = {};
+function rendChart(id, cfg){
+  if(CHARTS[id]){ CHARTS[id].data=cfg.data; if(cfg.options) CHARTS[id].options=cfg.options; CHARTS[id].update(); return; }
+  CHARTS[id] = new Chart(document.getElementById(id), cfg);
+}
+
+// ══════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════
+function abrirModal(){
+  // sincronizar inputs con D actual
+  document.getElementById('m-sueldo').value  = D.sueldo;
+  document.getElementById('m-extras').value  = D.extras;
+  document.getElementById('m-guardia').value = D.guardia;
+  document.getElementById('m-pin').value     = D.pin;
+  document.getElementById('m-alq1').value    = D.alq1;
+  document.getElementById('m-alq2').value    = D.alq2;
+  document.getElementById('m-icl').value     = D.icl;
+  document.getElementById('m-mercado').value = D.mercado;
+  document.getElementById('m-serv').value    = D.serv;
+  document.getElementById('m-cont').value    = D.cont;
+  document.getElementById('m-auto').value    = D.auto_;
+  document.getElementById('m-mono').value    = D.mono;
+  document.getElementById('m-deuda').value   = D.deuda;
+  document.getElementById('m-ptdc').value    = D.ptdc;
+  document.getElementById('m-tem').value     = D.tem;
+  document.getElementById('m-fe-meses').value  = D.meta_fe_meses;
+  document.getElementById('m-fe-pct').value    = D.pct_fe;
+  document.getElementById('m-fe-saldo').value  = D.saldo_fe_actual;
+  document.getElementById('m-meta-inv').value  = D.meta_inv;
+  document.getElementById('m-rent-inv').value  = D.rent_inv;
+  document.getElementById('modal').classList.add('open');
+}
+function cerrarModal(){ document.getElementById('modal').classList.remove('open'); }
+function aplicarYCerrar(){
+  D.sueldo  = +document.getElementById('m-sueldo').value  || D.sueldo;
+  D.extras  = +document.getElementById('m-extras').value  || 0;
+  D.guardia = +document.getElementById('m-guardia').value || 0;
+  D.pin     = +document.getElementById('m-pin').value     || 0;
+  D.alq1    = +document.getElementById('m-alq1').value    || D.alq1;
+  D.alq2    = +document.getElementById('m-alq2').value    || D.alq2;
+  D.icl     = +document.getElementById('m-icl').value     || D.icl;
+  D.mercado = +document.getElementById('m-mercado').value || D.mercado;
+  D.serv    = +document.getElementById('m-serv').value    || D.serv;
+  D.cont    = +document.getElementById('m-cont').value    || D.cont;
+  D.auto_   = +document.getElementById('m-auto').value    || D.auto_;
+  D.mono    = +document.getElementById('m-mono').value    || D.mono;
+  D.deuda   = +document.getElementById('m-deuda').value   || D.deuda;
+  D.ptdc    = +document.getElementById('m-ptdc').value    || D.ptdc;
+  D.tem     = +document.getElementById('m-tem').value     || D.tem;
+  D.meta_fe_meses  = +document.getElementById('m-fe-meses').value  || D.meta_fe_meses;
+  D.pct_fe         = +document.getElementById('m-fe-pct').value    || D.pct_fe;
+  D.saldo_fe_actual= +document.getElementById('m-fe-saldo').value  || 0;
+  D.meta_inv       = +document.getElementById('m-meta-inv').value  || D.meta_inv;
+  D.rent_inv       = +document.getElementById('m-rent-inv').value  || D.rent_inv;
+  // sync modal inputs with D
+  const miInput = document.getElementById('inv-meta-input');
+  if(miInput) miInput.value = D.meta_inv;
+  cerrarModal();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// RENDER RESUMEN
+// ══════════════════════════════════════════════
+function renderResumen(){
+  const gf0  = gfMes(0); // agosto (primer mes proyectado, mamá ya ajustó)
+  const ing  = D.sueldo + D.extras + D.guardia + D.pin;
+  const libre = ing - gf0.total - D.ptdc;
+  const sfClass = libre>=0 ? (libre>150000?'g':'w') : 'r';
+
+  document.getElementById('k-res').innerHTML = `
+    <div class="kpi g"><label>Ingreso total</label><p class="val">${fmt(ing)}</p><p class="sub">Sueldo + extras + guardia + Piñateli</p></div>
+    <div class="kpi r"><label>Gastos fijos</label><p class="val">${fmt(gf0.total)}</p><p class="sub">Incl. alquileres y UVAs</p></div>
+    <div class="kpi w"><label>Pago TDC</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Mínimo estimado agosto</p></div>
+    <div class="kpi ${sfClass}"><label>Saldo libre</label><p class="val">${fmt(libre)}</p><p class="sub">${libre>=0?'Disponible para imprevistos':'Déficit — revisar'}</p></div>
+  `;
+
+  // Radiografía
+  const filas = [
+    ['Sueldo neto CORE', D.sueldo, 'g'],
+    ['Horas extras + guardia pasiva', D.extras+D.guardia, 'g'],
+    ['Ganancia neta Piñateli', D.pin, 'g'],
+    ['Alq. propio (ajustó jul-26)', -gf0.a1, 'r'],
+    ['Alq. mamá (ajusta ago-26)', -gf0.a2, 'r'],
+    ['Mercado / comida', -D.mercado, 'r'],
+    ['TV + celular + internet', -D.serv, 'r'],
+    ['Contador Piñateli', -D.cont, 'r'],
+    ['Autónomo Piñateli', -D.auto_, 'r'],
+    ['Monotributo + IB Piñateli', -D.mono, 'r'],
+    ['UVA Préstamo 1', -gf0.uva1, 'r'],
+    ['UVA Préstamo 2', -UVA2, 'r'],
+    ['Pago TDC', -D.ptdc, 'r'],
+  ];
+  let h = '<thead><tr><th>Concepto</th><th>Importe</th><th>% ingreso</th></tr></thead><tbody>';
+  filas.forEach(([l,v,c])=>{
+    const pct = Math.abs(Math.round(v/ing*100));
+    h += `<tr><td>${l}</td><td class="num-${c}">${fmt(v)}</td><td class="num-${c}">${pct}%</td></tr>`;
+  });
+  const lc = libre>=0?'num-g':'num-r';
+  h += `<tr class="total-row"><td>Saldo libre</td><td class="${lc}">${fmt(libre)}</td><td class="${lc}">${Math.round(libre/ing*100)}%</td></tr></tbody>`;
+  document.getElementById('tb-radiografia').innerHTML = h;
+
+  // Alert principal
+  const alMain = document.getElementById('al-res-main');
+  if(libre < 0)
+    alMain.innerHTML = `<div class="alert r"><span class="ico">🔴</span><span><strong>Déficit de ${fmt(Math.abs(libre))}</strong> — Los gastos superan el ingreso. Aumentá ventas de Piñateli o revisá algún gasto.</span></div>`;
+  else if(libre < 80000)
+    alMain.innerHTML = `<div class="alert w"><span class="ico">🟡</span><span><strong>Margen ajustado (${fmt(libre)})</strong> — Funciona pero sin colchón para imprevistos. Cuidado con gastos inesperados.</span></div>`;
+  else
+    alMain.innerHTML = `<div class="alert ok"><span class="ico">🟢</span><span><strong>Presupuesto equilibrado</strong> — Tenés ${fmt(libre)} libres este mes para imprevistos o pago extra de TDC.</span></div>`;
+
+  // Donut
+  const vals = [gf0.a1, gf0.a2, D.mercado, D.serv, D.cont+D.auto_+D.mono, gf0.uva1, UVA2, D.ptdc, D.pin, D.extras+D.guardia, Math.max(0,libre)];
+  const labs = ['Alq.propio','Alq.mamá','Comida','TV/cel','Ctr+imp','UVA1','UVA2','TDC','Piñateli','Extras/gdia','Libre'];
+  const cols = ['#1565C0','#7F77DD','#16A05C','#888780','#C07800','#D85A30','#F09595','#E24B4A','#43A047','#90CAF9','#A8DFC3'];
+  document.getElementById('ley-donut').innerHTML = labs.map((l,i)=>`<span><span class="dot" style="background:${cols[i]}"></span>${l}</span>`).join('');
+  rendChart('cDonut',{type:'doughnut',data:{labels:labs,datasets:[{data:vals,backgroundColor:cols,borderWidth:1,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' ('+Math.round(ctx.raw/ing*100)+'%)'}}}}});
+
+  // Alertas del mes
+  const alMes = document.getElementById('alertas-mes');
+  let alertsHTML = '';
+  if(gf0.uva1>0) alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>UVA Préstamo 1 activo hasta octubre: <strong>${fmt(UVA1)}/mes</strong>. Se libera en octubre junto con COPPEL, NBA y GARANTIAYA.</span></div>`;
+  alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>Alquiler mamá ajusta <strong>agosto</strong>: de ${fmt(D.alq2)} → <strong>${fmt(alq2(0))}</strong> (+${fmt(alq2(0)-D.alq2)})</span></div>`;
+  alertsHTML += `<div class="alert ok"><span class="ico">🟢</span><span>TOPMEGA es la <strong>última cuota en agosto</strong> (18/18). Desde septiembre liberás ${fmt(25206)}/mes de ese plan.</span></div>`;
+  if(D.pin < 100000) alertsHTML += `<div class="alert r"><span class="ico">🔴</span><span>Piñateli con ventas bajas (${fmt(D.pin)}). Considerá activar estrategias de venta para mejorar el margen mensual.</span></div>`;
+  alMes.innerHTML = alertsHTML || '<div class="alert ok"><span class="ico">🟢</span><span>Sin alertas críticas este mes.</span></div>';
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALQUILER
+// ══════════════════════════════════════════════
+function renderAlquiler(){
+  const a1_ago = alq1(0), a2_ago = alq2(0);
+  const a1_jul27 = alq1(11), a2_jul27 = alq2(11);
+
+  document.getElementById('k-alq').innerHTML = `
+    <div class="kpi"><label>Alq. propio — hoy</label><p class="val">${fmt(D.alq1)}</p><p class="sub">Ajustó jul-26</p></div>
+    <div class="kpi w"><label>Próximo ajuste propio</label><p class="val">Oct-26</p><p class="sub">+${fmtP(D.icl)} → ${fmt(alq1(2))}</p></div>
+    <div class="kpi"><label>Alq. mamá — hoy</label><p class="val">${fmt(D.alq2)}</p><p class="sub">Ajusta ago-26</p></div>
+    <div class="kpi w"><label>Próximo ajuste mamá</label><p class="val">Ago-26 🔜</p><p class="sub">+${fmtP(D.icl)} → ${fmt(alq2(0))}</p></div>
+  `;
+
+  document.getElementById('al-alq-prox').innerHTML = `<div class="alert w"><span class="ico">⚠️</span><span>El alquiler de tu mamá ajusta <strong>el mes que viene (agosto)</strong>. Pasará de ${fmt(D.alq2)} a <strong>${fmt(alq2(0))}</strong> (+${fmt(alq2(0)-D.alq2)}). Tené ese impacto en cuenta junto con el pago de TDC de agosto.</span></div>`;
+
+  const a1s=[],a2s=[],tots=[];
+  for(let i=0;i<12;i++){const a=alq1(i),b=alq2(i);a1s.push(a);a2s.push(b);tots.push(a+b);}
+
+  rendChart('cAlq',{type:'line',data:{labels:MESES_F,datasets:[
+    {label:'Propio',data:a1s,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.08)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:MESES_F.map((_,i)=>ADJ1.includes(i)?'#E24B4A':'#1565C0'),pointBorderColor:'transparent'},
+    {label:'Mamá',data:a2s,borderColor:'#7F77DD',fill:false,tension:0.3,pointRadius:5,pointBackgroundColor:MESES_F.map((_,i)=>ADJ2.includes(i)?'#E24B4A':'#7F77DD'),pointBorderColor:'transparent',borderDash:[4,3]},
+    {label:'Total',data:tots,borderColor:'#E24B4A',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[8,4]},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000))+'k',maxTicksLimit:5},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}}}}});
+
+  let tbl='<thead><tr><th>Mes</th><th>Alq. propio</th><th>Alq. mamá</th><th>Total</th><th>Δ vs ant.</th><th>Semáforo</th></tr></thead><tbody>';
+  for(let i=0;i<12;i++){
+    const a=alq1(i),b=alq2(i),tot=a+b;
+    const delta=i>0?tot-(alq1(i-1)+alq2(i-1)):0;
+    const dc=delta>0?'num-r':delta<0?'num-g':'';
+    const b1=ADJ1.includes(i)?'<span class="pill pill-b">propio+ICL</span>':'';
+    const b2=ADJ2.includes(i)?'<span class="pill pill-w">mamá+ICL</span>':'';
+    const sf=ADJ1.includes(i)||ADJ2.includes(i)?'🔴':'🟢';
+    tbl+=`<tr><td>${MESES_F[i]}${b1}${b2}</td><td>${fmt(a)}</td><td>${fmt(b)}</td><td><strong>${fmt(tot)}</strong></td><td class="${dc}">${i>0?sign(delta):'—'}</td><td>${sf}</td></tr>`;
+  }
+  tbl+='</tbody>';
+  document.getElementById('tb-alq').innerHTML=tbl;
+
+  const impAnual = tots[11]-tots[0];
+  document.getElementById('al-alq-imp').innerHTML=`<div class="alert w"><span class="ico">📊</span><span>En 12 meses los alquileres combinados pasan de <strong>${fmt(tots[0])}</strong> a <strong>${fmt(tots[11])}</strong> — un aumento de <strong>${fmt(impAnual)}</strong> anuales. Este es el principal riesgo inflacionario de tu presupuesto: equivale a <strong>${fmt(Math.round(impAnual/12))}/mes extra</strong> en promedio.</span></div>`;
+}
+
+// ══════════════════════════════════════════════
+// RENDER TDC
+// ══════════════════════════════════════════════
+function renderTDC(){
+  const tem = D.tem/100;
+  let d=D.deuda, sds=[d], acs=[0], pa=0, ml=null;
+  const ML=['Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
+  for(let i=0;i<7;i++){
+    const int=d*tem; d+=int;
+    let p=D.ptdc; if(i>=2&&d>0) p=D.ptdc+UVA1;
+    const pr=Math.min(p,d); d=Math.max(0,d-pr); pa+=pr;
+    sds.push(Math.round(d)); acs.push(Math.round(pa));
+    if(d<=0&&!ml) ml=ML[i]; if(d<=0) break;
+  }
+  while(sds.length<8){sds.push(0);acs.push(acs[acs.length-1]);}
+
+  const ceroMes = ml||'>Feb-27';
+  const ceroClass = ['Ago','Sep','Oct','Nov'].includes(ml)?'g':'w';
+
+  document.getElementById('k-tdc').innerHTML=`
+    <div class="kpi r"><label>Deuda TDC actual</label><p class="val">${fmt(D.deuda)}</p><p class="sub">Post pagos jul-26</p></div>
+    <div class="kpi w"><label>TEM mensual</label><p class="val">${fmtP(D.tem)}</p><p class="sub">Sube desde ago-26</p></div>
+    <div class="kpi w"><label>Pago mínimo ago</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Estimado</p></div>
+    <div class="kpi ${ceroClass}"><label>Deuda cero estimada</label><p class="val">${ceroMes}</p><p class="sub">Con UVA1 desde oct</p></div>
+  `;
+
+  rendChart('cTDC',{type:'line',data:{labels:['Hoy',...ML],datasets:[
+    {data:sds,borderColor:'#D93025',backgroundColor:'rgba(217,48,37,.07)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:sds.map(v=>v===0?'#16A05C':'#D93025')},
+    {data:acs,borderColor:'#16A05C',fill:false,tension:0.3,pointRadius:3,borderDash:[5,4]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/100000)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}});
+
+  document.getElementById('tb-cuotas').innerHTML=`
+    <thead><tr><th>Compra</th><th>Cuota</th><th>Termina</th><th>$/mes</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td>TOPMEGA</td><td>18/18</td><td>Ago-26</td><td>$25.206</td><td><span class="pill pill-g">✓ Última</span></td></tr>
+      <tr><td>COPPEL</td><td>10/12</td><td>Oct-26</td><td>$55.069</td><td><span class="pill pill-w">2 cuotas</span></td></tr>
+      <tr><td>MP*GARANTIAYA</td><td>11/12</td><td>Oct-26</td><td>$26.000</td><td><span class="pill pill-w">2 cuotas</span></td></tr>
+      <tr><td>NBA</td><td>06/09</td><td>Oct-26</td><td>$65.555</td><td><span class="pill pill-w">4 cuotas</span></td></tr>
+      <tr><td>UVA Préstamo 1</td><td>8/12</td><td>Oct-26</td><td>${fmt(UVA1)}</td><td><span class="pill pill-r">Libera oct</span></td></tr>
+      <tr><td>UVA Préstamo 2</td><td>4/18</td><td>Feb-28</td><td>${fmt(UVA2)}</td><td><span class="pill pill-r">14 cuotas</span></td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="3"><strong>Fondos liberados desde nov-26</strong></td><td class="num-g"><strong>+$368.830/mes</strong></td><td></td></tr></tfoot>
+  `;
+}
+
+// ══════════════════════════════════════════════
+// RENDER PROYECCIÓN 12M
+// ══════════════════════════════════════════════
+function renderProy(){
+  const tem=D.tem/100, pctA=D.pct_ahorro/100;
+  let deuda=D.deuda, ahorro=0;
+  const sds=[],sups=[],ahos=[],rows=[];
+  for(let i=0;i<12;i++){
+    const gf=gfMes(i);
+    const ing=D.sueldo+D.extras+D.guardia+D.pin;
+    const int=Math.round(deuda*tem); deuda+=int;
+    let p=D.ptdc; if(i>=2&&deuda>0) p=D.ptdc+UVA1;
+    const pr=Math.min(p,deuda); deuda=Math.max(0,deuda-pr);
+    const sup=ing-gf.total-pr;
+    const ames=deuda===0?Math.max(0,Math.round(sup*pctA)):0;
+    ahorro+=ames;
+    rows.push({mes:MESES[i],ing,gf:gf.total,tdc:Math.round(pr),sup:Math.round(sup),deuda:Math.round(deuda),aho:Math.round(ahorro),aj1:ADJ1.includes(i),aj2:ADJ2.includes(i)});
+    sds.push(Math.round(deuda));sups.push(Math.max(0,Math.round(sup)));ahos.push(Math.round(ahorro));
+  }
+
+  rendChart('cProy',{type:'line',data:{labels:MESES,datasets:[
+    {label:'Deuda TDC',data:sds,borderColor:'#D93025',backgroundColor:'rgba(217,48,37,.06)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:sds.map(v=>v===0?'#16A05C':'#D93025')},
+    {label:'Superávit',data:sups,borderColor:'#16A05C',fill:false,tension:0.3,pointRadius:3,borderDash:[5,4]},
+    {label:'Ahorro acum.',data:ahos,borderColor:'#1565C0',fill:false,tension:0.3,pointRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/100000)/10)+'M',maxTicksLimit:5},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}});
+
+  let h=`<table style="min-width:680px;font-size:11px;">
+    <thead><tr><th>Mes</th><th>Ingreso</th><th>Gastos fijos</th><th>TDC</th><th>Superávit</th><th>Deuda TDC</th><th>Ahorro acum.</th><th>🚦</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const dz=r.deuda===0;
+    const sc=r.sup>=0?'num-g':'num-r';
+    const dc=dz?'num-g':'';
+    const b1=r.aj1?'<span class="pill pill-b" style="font-size:8px">alq+</span>':'';
+    const b2=r.aj2?'<span class="pill pill-w" style="font-size:8px">mam+</span>':'';
+    const sf=r.sup<0?'🔴':r.sup<100000?'🟡':'🟢';
+    h+=`<tr><td>${r.mes}${b1}${b2}${dz?'<span class="pill pill-g">✓</span>':''}</td><td>${fmt(r.ing)}</td><td>${fmt(r.gf)}</td><td>${fmt(r.tdc)}</td><td class="${sc}">${fmt(r.sup)}</td><td class="${dc}">${dz?'$0 ✓':fmt(r.deuda)}</td><td style="color:#1565C0;font-weight:600">${r.aho>0?fmt(r.aho):'—'}</td><td>${sf}</td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('tb-proy').innerHTML=h;
+}
+
+// ══════════════════════════════════════════════
+// HELPERS COMPARTIDOS FONDOS
+// ══════════════════════════════════════════════
+function superavitPostDeuda(){
+  // Superávit mensual estimado desde nov-26 (sin TDC ni UVA1)
+  const ing = D.sueldo + D.extras + D.guardia + D.pin;
+  const gf  = gfMes(3); // nov-26 (idx 3): sin UVA1, con alquileres ajustados
+  return Math.max(0, ing - gf.total);
+}
+
+function metaFE(){
+  // Meta fondo emergencia = N meses de gastos fijos
+  const gf = gfMes(3); // nov-26 como referencia
+  return Math.round(gf.total * D.meta_fe_meses);
+}
+
+const MESES_EXT = ['Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
+
+// ══════════════════════════════════════════════
+// RENDER FONDO EMERGENCIA
+// ══════════════════════════════════════════════
+function renderEmergencia(){
+  const sup    = superavitPostDeuda();
+  const mfe    = metaFE();
+  const amesFE = Math.round(sup * D.pct_fe / 100);
+  const saldo0 = D.saldo_fe_actual;
+  const falta  = Math.max(0, mfe - saldo0);
+  const mesesFE = amesFE > 0 ? Math.ceil(falta / amesFE) : 99;
+
+  // Update controles
+  const feCtrl = document.getElementById('fe-pct-ctrl');
+  if(feCtrl) feCtrl.textContent = D.pct_fe + '%';
+  const feMeses = document.getElementById('fe-meses-label');
+  if(feMeses) feMeses.textContent = D.meta_fe_meses;
+  const feSaldoActual = document.getElementById('fe-saldo-actual-label');
+  if(feSaldoActual) feSaldoActual.textContent = fmt(saldo0);
+
+  // KPIs
+  const pctCompletado = Math.min(100, Math.round(saldo0/mfe*100));
+  document.getElementById('fe-kpis').innerHTML=`
+    <div class="split-kpi"><label>Meta total</label><div class="sv b">${fmt(mfe)}</div></div>
+    <div class="split-kpi"><label>Ya acumulado</label><div class="sv b">${fmt(saldo0)}</div></div>
+    <div class="split-kpi"><label>Falta</label><div class="sv w">${fmt(falta)}</div></div>
+    <div class="split-kpi"><label>Ahorro/mes</label><div class="sv b">${fmt(amesFE)}</div></div>
+    <div class="split-kpi"><label>Meses restantes</label><div class="sv ${mesesFE<=6?'g':'w'}">${mesesFE >= 99 ? '—' : mesesFE}</div></div>
+  `;
+
+  // Progress bar
+  document.getElementById('fe-bar').style.width = pctCompletado + '%';
+  document.getElementById('fe-pct-label').textContent = pctCompletado + '%';
+  document.getElementById('fe-meta-label').textContent = 'Meta: ' + fmt(mfe);
+  document.getElementById('fe-badge').textContent = pctCompletado >= 100 ? '✅ Completado' : `Fase 1 — ${pctCompletado}%`;
+
+  // Acumulación mes a mes (desde nov-26 = idx 0)
+  const acums = [], labels = [];
+  let ac = saldo0;
+  for(let i=0;i<18;i++){
+    ac = Math.min(mfe, ac + (i>0 ? amesFE : 0));
+    acums.push(Math.round(ac));
+    labels.push(MESES_EXT[i]);
+    if(ac >= mfe) break;
+  }
+  // rellenar si necesario
+  while(acums.length < 12){ acums.push(mfe); labels.push(MESES_EXT[acums.length]); }
+
+  rendChart('cFE',{type:'line',data:{labels,datasets:[
+    {data:acums,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.1)',fill:true,tension:0.3,pointRadius:4,
+     pointBackgroundColor:acums.map(v=>v>=mfe?'#16A05C':'#1565C0')},
+    {data:Array(labels.length).fill(mfe),borderColor:'#42A5F5',fill:false,borderDash:[6,4],pointRadius:0,borderWidth:1.5}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+    scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+  // Timeline
+  const mesMeta = mesesFE < 99 ? MESES_EXT[Math.min(mesesFE, MESES_EXT.length-1)] + '-' + (mesesFE<=2?'26':mesesFE<=14?'27':'28') : '—';
+  const fase1 = fmt(Math.round(mfe/3));
+  const fase2 = fmt(Math.round(mfe*2/3));
+  document.getElementById('tl-fe').innerHTML = `
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#1565C0"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">Nov-26</div>
+        <div class="tl-title">Inicio del fondo 🟢</div>
+        <div class="tl-impact num-b">TDC cancelada · Empieza el ahorro con ${fmt(amesFE)}/mes</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#42A5F5"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">~${mesesFE<=6?MESES_EXT[Math.ceil(mesesFE/2)]+'-27':'Var'}</div>
+        <div class="tl-title">Fondo = 1 mes de gastos</div>
+        <div class="tl-impact num-b">Meta parcial: ${fase1}</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#16A05C"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">~${mesMeta}</div>
+        <div class="tl-title">🎉 Fondo de emergencia completo (${D.meta_fe_meses} meses)</div>
+        <div class="tl-impact num-g">Meta alcanzada: ${fmt(mfe)} · Pasás a Fase 2: Inversión</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#C07800"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">Feb-28</div>
+        <div class="tl-title">UVA Préstamo 2 termina</div>
+        <div class="tl-impact num-g">+$81.045/mes adicional disponible</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('al-fe').innerHTML = mesesFE < 99
+    ? `<div class="alert ok"><span class="ico">🛡️</span><span>Con <strong>${fmt(amesFE)}/mes</strong> (${D.pct_fe}% del superávit), completás el fondo de emergencia de <strong>${D.meta_fe_meses} meses</strong> (${fmt(mfe)}) en aproximadamente <strong>${mesesFE} meses</strong> desde noviembre. A partir de ahí, el resto del superávit pasa a inversión.</span></div>`
+    : `<div class="alert w"><span class="ico">⚠️</span><span>Con el superávit actual no alcanza para llenar el fondo de emergencia. Revisá si podés aumentar las ventas de Piñateli o reducir algún gasto.</span></div>`;
+
+  // Sincronizar inversión con el % restante
+  renderInversion();
+}
+
+// ══════════════════════════════════════════════
+// RENDER AHORRO / INVERSIÓN
+// ══════════════════════════════════════════════
+function renderInversion(){
+  const sup      = superavitPostDeuda();
+  const pctInv   = Math.max(0, 100 - D.pct_fe);
+  const amesINV  = Math.round(sup * pctInv / 100);
+  const rentMens = D.rent_inv / 100 / 12;
+  const meta     = D.meta_inv;
+
+  // Update controles
+  const invRent = document.getElementById('inv-rent-label');
+  if(invRent) invRent.textContent = D.rent_inv + '% TNA';
+  const invPctResto = document.getElementById('inv-pct-resto');
+  if(invPctResto) invPctResto.textContent = pctInv + '%';
+
+  // Calcular cuándo termina el fondo emergencia para saber cuándo arranca la inversión
+  const mfe   = metaFE();
+  const amesFE = Math.round(sup * D.pct_fe / 100);
+  const mesesFE = amesFE > 0 ? Math.ceil(Math.max(0, mfe - D.saldo_fe_actual) / amesFE) : 12;
+
+  // Acumulación con rendimiento
+  const acums_cap = [], acums_rend = [], labels_inv = [];
+  let cap = 0, total = 0;
+  for(let i=0;i<24;i++){
+    if(i >= mesesFE){ // empieza a invertir cuando termina el fondo emergencia
+      cap   += amesINV;
+      total  = total * (1 + rentMens) + amesINV;
+    } else {
+      total  = total * (1 + rentMens);
+    }
+    acums_cap.push(Math.round(cap));
+    acums_rend.push(Math.max(0, Math.round(total - cap)));
+    labels_inv.push(MESES_EXT[i] || '');
+    if(total >= meta) break;
+  }
+  while(acums_cap.length < 12){ acums_cap.push(acums_cap[acums_cap.length-1]||0); acums_rend.push(acums_rend[acums_rend.length-1]||0); labels_inv.push(MESES_EXT[acums_cap.length-1]||''); }
+
+  const totalFinal = acums_cap[acums_cap.length-1] + acums_rend[acums_rend.length-1];
+  const pctCompletado = Math.min(100, Math.round(totalFinal/meta*100));
+  const mesesMeta = acums_cap.findIndex((_,i)=>(acums_cap[i]+acums_rend[i])>=meta);
+  const mesesMetaTotal = mesesMeta >= 0 ? mesesMeta + mesesFE : null;
+
+  document.getElementById('inv-kpis').innerHTML=`
+    <div class="split-kpi"><label>Empieza en</label><div class="sv g">~${mesesFE} meses</div></div>
+    <div class="split-kpi"><label>Ahorro/mes</label><div class="sv g">${fmt(amesINV)}</div></div>
+    <div class="split-kpi"><label>Meta</label><div class="sv w">${fmt(meta)}</div></div>
+    <div class="split-kpi"><label>Rentabilidad</label><div class="sv g">${D.rent_inv}% TNA</div></div>
+    <div class="split-kpi"><label>Total estimado (12m)</label><div class="sv g">${fmt(totalFinal)}</div></div>
+  `;
+
+  document.getElementById('inv-bar').style.width = pctCompletado + '%';
+  document.getElementById('inv-pct-label').textContent = pctCompletado + '%';
+  document.getElementById('inv-meta-label').textContent = 'Meta: ' + fmt(meta);
+  document.getElementById('inv-badge').textContent = pctCompletado >= 100 ? '✅ Meta alcanzada' : `Fase 2 — ${pctCompletado}%`;
+
+  const totales = acums_cap.map((c,i)=>c+acums_rend[i]);
+  rendChart('cINV',{type:'bar',data:{labels:labels_inv,datasets:[
+    {label:'Capital propio',data:acums_cap,backgroundColor:'rgba(22,160,92,.7)',borderRadius:4,stack:'s'},
+    {label:'Rendimiento',data:acums_rend,backgroundColor:'rgba(165,214,167,.8)',borderRadius:4,stack:'s'},
+    {data:Array(labels_inv.length).fill(meta),type:'line',borderColor:'#66BB6A',fill:false,borderDash:[6,4],pointRadius:0,borderWidth:1.5,stack:undefined}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},
+    scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'},stacked:true},x:{grid:{display:false},stacked:true,ticks:{font:{size:10}}}}}});
+
+  // Timeline inversión
+  const mesInicioInv = MESES_EXT[mesesFE] + '-' + (mesesFE<=2?'26':mesesFE<=14?'27':'28');
+  document.getElementById('tl-inv').innerHTML = `
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#C9CFD8"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">Nov-26 a ~${MESES_EXT[mesesFE-1]}-27</div>
+        <div class="tl-title">Construyendo fondo emergencia 🛡️</div>
+        <div class="tl-impact" style="color:var(--text3);">El 100% del ahorro va al fondo de emergencia primero</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#16A05C"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">~${mesInicioInv}</div>
+        <div class="tl-title">🚀 Arrancan las inversiones</div>
+        <div class="tl-impact num-g">${fmt(amesINV)}/mes · ${pctInv}% del superávit · Rentabilidad ${D.rent_inv}% TNA</div>
+      </div>
+    </div>
+    ${mesesMetaTotal ? `
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#43A047"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">~${mesesMetaTotal} meses desde nov-26</div>
+        <div class="tl-title">🎉 Meta de inversión alcanzada</div>
+        <div class="tl-impact num-g">${fmt(meta)} acumulados (capital + rendimiento)</div>
+      </div>
+    </div>` : ''}
+    <div class="tl-item">
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#C07800"></div></div>
+      <div class="tl-body">
+        <div class="tl-mes">Feb-28</div>
+        <div class="tl-title">UVA Préstamo 2 termina</div>
+        <div class="tl-impact num-g">+$81.045/mes adicional para invertir</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('al-inv').innerHTML = `<div class="alert ok"><span class="ico">📈</span><span>Empezás a invertir ~<strong>${fmt(amesINV)}/mes</strong> después de completar el fondo de emergencia. Con una rentabilidad del <strong>${D.rent_inv}% TNA</strong>, el rendimiento acumulado empieza a hacer diferencia a partir del 3er mes de inversión.</span></div>`;
+}
+
+// ══════════════════════════════════════════════
+// SHOW TAB
+// ══════════════════════════════════════════════
+function ST(t){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+t).classList.add('active');
+  document.querySelectorAll('.tab').forEach(b=>{if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('active');});
+  if(t==='alquiler') renderAlquiler();
+  if(t==='tdc')      renderTDC();
+  if(t==='proy')     renderProy();
+  if(t==='emergen')  renderEmergencia();
+  if(t==='invest')   renderInversion();
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALL + INIT
+// ══════════════════════════════════════════════
+function renderAll(){
+  renderResumen();
+  renderTDC();
+  renderAlquiler();
+  renderProy();
+  renderEmergencia();
+  renderInversion();
+}
+
+// Fecha en topbar
+const hoy = new Date();
+document.getElementById('fecha-hoy').textContent =
+  'Actualizado: ' + hoy.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'});
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
