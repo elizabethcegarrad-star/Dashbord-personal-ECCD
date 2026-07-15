@@ -274,6 +274,15 @@
   .tl-title { font-size: 13px; font-weight: 600; color: var(--text); margin: 1px 0 2px; }
   .tl-impact { font-size: 12px; font-weight: 600; }
 
+  /* ── SCENARIO BUTTONS TDC ── */
+  .sc-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text2); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .sc-btn:hover  { border-color: var(--blue); color: var(--blue); }
+  .sc-btn.sc-active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 600; }
+
   /* ── PROGRESS BAR ── */
   .progress-wrap { margin: 10px 0 4px; }
   .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
@@ -350,10 +359,10 @@
     </div>
     <div class="modal-body">
 
-      <div class="modal-section-title">💰 Ingresos mensuales</div>
-      <div class="field-row"><label>Sueldo neto CORE (sin anticipos)</label><input type="number" id="m-sueldo" value="2539455" step="1000"><span class="unit">$</span></div>
-      <div class="field-row"><label>Horas extras promedio / mes</label><input type="number" id="m-extras" value="270596" step="1000"><span class="unit">$</span></div>
-      <div class="field-row"><label>Guardia pasiva mensual</label><input type="number" id="m-guardia" value="102560" step="1000"><span class="unit">$</span></div>
+      <div class="modal-section-title">💼 Ingresos — CORE FIT</div>
+      <div class="field-row"><label>Sueldo base bruto</label><input type="number" id="m-sueldo" value="2915746" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Horas extras totales/mes</label><input type="number" id="m-extras" value="170086" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Adicional Guardia Pasiva</label><input type="number" id="m-guardia" value="102560" step="1000"><span class="unit">$</span></div>
       <div class="field-row"><label>Ganancia neta Piñateli (variable)</label><input type="number" id="m-pin" value="250000" step="10000"><span class="unit">$</span></div>
 
       <div class="modal-section-title">🏠 Alquileres</div>
@@ -367,6 +376,7 @@
       <div class="field-row"><label>Contador Piñateli</label><input type="number" id="m-cont" value="45000" step="1000"><span class="unit">$</span></div>
       <div class="field-row"><label>Autónomo Piñateli</label><input type="number" id="m-auto" value="78000" step="1000"><span class="unit">$</span></div>
       <div class="field-row"><label>Monotributo + IB Piñateli</label><input type="number" id="m-mono" value="65000" step="1000"><span class="unit">$</span></div>
+      <div class="field-row"><label>Hijos — voley y gastos varios</label><input type="number" id="m-hijos" value="200000" step="5000"><span class="unit">$</span></div>
 
       <div class="modal-section-title">💳 Tarjeta de crédito</div>
       <div class="field-row"><label>Saldo deuda TDC actual</label><input type="number" id="m-deuda" value="1863340" step="1000"><span class="unit">$</span></div>
@@ -455,7 +465,32 @@
   <!-- ══ TAB TDC ══ -->
   <div id="pane-tdc" class="pane">
     <div class="kpi-grid" id="k-tdc"></div>
+
     <div class="card">
+      <div class="card-title"><span>🎮</span> Simulador de escenario de pago</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="tdc-scenario-btns">
+          <button onclick="setTDCScenario('min')"  class="sc-btn sc-active" id="sc-min">💳 Pago mínimo (~$356k)</button>
+          <button onclick="setTDCScenario('med')"  class="sc-btn" id="sc-med">💪 Pago medio (~$500k)</button>
+          <button onclick="setTDCScenario('max')"  class="sc-btn" id="sc-max">🚀 Pago máximo (~$700k)</button>
+          <button onclick="setTDCScenario('cus')"  class="sc-btn" id="sc-cus">✏️ Personalizado</button>
+        </div>
+        <div id="tdc-custom-row" style="display:none;align-items:center;gap:8px;">
+          <label style="font-size:12px;color:var(--text2);min-width:130px;">Pago mensual</label>
+          <input type="number" id="tdc-custom-val" value="356000" step="5000" min="0"
+            oninput="D.ptdc=+this.value||D.ptdc;renderTDC();renderResumen();renderProy();"
+            style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;">
+          <span style="font-size:12px;color:var(--text3);">$</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;padding:8px 10px;background:var(--bg);border-radius:8px;">
+          <span>Pago actual: <strong id="tdc-pago-actual" class="num-b">$356.000</strong></span>
+          <span>·</span>
+          <span>Deuda cero: <strong id="tdc-cero-inline" class="num-g">—</strong></span>
+          <span>·</span>
+          <span>Intereses totales: <strong id="tdc-int-total" class="num-r">—</strong></span>
+        </div>
+      </div>
+    </div>
       <div class="card-title"><span>📉</span> Proyección saldo TDC</div>
       <div class="legend">
         <span><span class="dot" style="background:#D93025"></span>Saldo deuda</span>
@@ -652,7 +687,20 @@
 let D = {
   sueldo:   2539455,
   extras:   270596,
-  guardia:  102560,
+  // Sueldo: datos reales del recibo de junio-26
+  // Bruto: 3.274.956 | Retenciones: jub 360.245 + ley19032 98.248 + OS 98.248 = 556.742
+  // Sin anticipo (1.071.849): neto real mensual = 1.646.365 → pero el "normal" sin anticipos es:
+  // Haberes base = 2.915.746 + extras 72.893 + 97.191 + guardia 102.560 = 3.188.390
+  // Retenciones proporcionales (sin anticipo) = 556.742
+  // Neto normalizado = 3.188.390 - 556.742 = 2.631.648 → usamos eso como referencia
+  sueldo_base: 2915746,   // sueldo base bruto
+  extras_50:   72894,     // horas extras 50% (3hs típicas)
+  extras_100:  97192,     // horas extras 100% (3hs típicas)
+  guardia:     102560,    // adicional guardia pasiva
+  // Retenciones de ley (sin anticipo)
+  ret_jub:     360245,    // jubilación 11%
+  ret_ley:     98249,     // ley 19.032 3%
+  ret_os:      98249,     // obra social 3%
   pin:      250000,
   alq1:     1144900,
   alq2:     325000,
@@ -662,18 +710,19 @@ let D = {
   cont:     45000,
   auto_:    78000,
   mono:     65000,
+  hijos:    200000,       // ← nuevo: voley hijos
   deuda:    1863340,
   ptdc:     356000,
   tem:      8.42,
-  pct_ahorro: 40,       // legacy (no usado en nuevos tabs)
+  pct_ahorro: 40,       // legacy
   meta:     5000000,    // legacy
   // Fondo emergencia
-  meta_fe_meses: 3,     // meses de gastos a cubrir
-  pct_fe: 60,           // % del superávit post-deuda → fondo emergencia
-  saldo_fe_actual: 0,   // saldo ya acumulado en el fondo
+  meta_fe_meses: 3,
+  pct_fe: 60,
+  saldo_fe_actual: 0,
   // Ahorro / inversión
-  meta_inv: 5000000,    // meta de ahorro/inversión
-  rent_inv: 50,         // rentabilidad anual estimada %
+  meta_inv: 5000000,
+  rent_inv: 50,
 };
 
 // Gastos fijos UVA y cuotas
@@ -691,12 +740,20 @@ const fmt  = n => '$' + Math.round(n).toLocaleString('es-AR');
 const fmtP = n => (Math.round(n*10)/10).toFixed(1).replace('.',',') + '%';
 const sign = n => n > 0 ? '+' + fmt(n) : fmt(n);
 
+function netoReal(){
+  // Bruto total = base + extras + guardia
+  const bruto = D.sueldo_base + D.extras_50 + D.extras_100 + D.guardia;
+  // Retenciones de ley (jubilación 11% + ley19032 3% + OS 3% = 17% del bruto imponible)
+  const ret = D.ret_jub + D.ret_ley + D.ret_os;
+  return bruto - ret;
+}
+
 function alq1(i){ const n=ADJ1.filter(x=>x<=i).length; return Math.round(D.alq1 * Math.pow(1+D.icl/100,n)); }
 function alq2(i){ const n=ADJ2.filter(x=>x<=i).length; return Math.round(D.alq2 * Math.pow(1+D.icl/100,n)); }
 function gfMes(i){
   const a1=alq1(i), a2=alq2(i);
   const uva1 = i<3 ? UVA1 : 0;
-  const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + UVA2;
+  const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + D.hijos + UVA2;
   return { a1, a2, uva1, total: a1+a2+base+uva1 };
 }
 
@@ -713,9 +770,8 @@ function rendChart(id, cfg){
 // MODAL
 // ══════════════════════════════════════════════
 function abrirModal(){
-  // sincronizar inputs con D actual
-  document.getElementById('m-sueldo').value  = D.sueldo;
-  document.getElementById('m-extras').value  = D.extras;
+  document.getElementById('m-sueldo').value  = D.sueldo_base;
+  document.getElementById('m-extras').value  = D.extras_50 + D.extras_100;
   document.getElementById('m-guardia').value = D.guardia;
   document.getElementById('m-pin').value     = D.pin;
   document.getElementById('m-alq1').value    = D.alq1;
@@ -726,6 +782,7 @@ function abrirModal(){
   document.getElementById('m-cont').value    = D.cont;
   document.getElementById('m-auto').value    = D.auto_;
   document.getElementById('m-mono').value    = D.mono;
+  document.getElementById('m-hijos').value   = D.hijos;
   document.getElementById('m-deuda').value   = D.deuda;
   document.getElementById('m-ptdc').value    = D.ptdc;
   document.getElementById('m-tem').value     = D.tem;
@@ -738,8 +795,10 @@ function abrirModal(){
 }
 function cerrarModal(){ document.getElementById('modal').classList.remove('open'); }
 function aplicarYCerrar(){
-  D.sueldo  = +document.getElementById('m-sueldo').value  || D.sueldo;
-  D.extras  = +document.getElementById('m-extras').value  || 0;
+  D.sueldo_base = +document.getElementById('m-sueldo').value  || D.sueldo_base;
+  const extrasTotal = +document.getElementById('m-extras').value || 0;
+  D.extras_50  = Math.round(extrasTotal * 0.43);
+  D.extras_100 = Math.round(extrasTotal * 0.57);
   D.guardia = +document.getElementById('m-guardia').value || 0;
   D.pin     = +document.getElementById('m-pin').value     || 0;
   D.alq1    = +document.getElementById('m-alq1').value    || D.alq1;
@@ -750,15 +809,19 @@ function aplicarYCerrar(){
   D.cont    = +document.getElementById('m-cont').value    || D.cont;
   D.auto_   = +document.getElementById('m-auto').value    || D.auto_;
   D.mono    = +document.getElementById('m-mono').value    || D.mono;
+  D.hijos   = +document.getElementById('m-hijos').value   || 0;
   D.deuda   = +document.getElementById('m-deuda').value   || D.deuda;
   D.ptdc    = +document.getElementById('m-ptdc').value    || D.ptdc;
   D.tem     = +document.getElementById('m-tem').value     || D.tem;
+  const brutoNew = D.sueldo_base + D.extras_50 + D.extras_100 + D.guardia;
+  D.ret_jub = Math.round(brutoNew * 0.11);
+  D.ret_ley = Math.round(brutoNew * 0.03);
+  D.ret_os  = Math.round(brutoNew * 0.03);
   D.meta_fe_meses  = +document.getElementById('m-fe-meses').value  || D.meta_fe_meses;
   D.pct_fe         = +document.getElementById('m-fe-pct').value    || D.pct_fe;
   D.saldo_fe_actual= +document.getElementById('m-fe-saldo').value  || 0;
   D.meta_inv       = +document.getElementById('m-meta-inv').value  || D.meta_inv;
   D.rent_inv       = +document.getElementById('m-rent-inv').value  || D.rent_inv;
-  // sync modal inputs with D
   const miInput = document.getElementById('inv-meta-input');
   if(miInput) miInput.value = D.meta_inv;
   cerrarModal();
@@ -769,22 +832,33 @@ function aplicarYCerrar(){
 // RENDER RESUMEN
 // ══════════════════════════════════════════════
 function renderResumen(){
-  const gf0  = gfMes(0); // agosto (primer mes proyectado, mamá ya ajustó)
-  const ing  = D.sueldo + D.extras + D.guardia + D.pin;
-  const libre = ing - gf0.total - D.ptdc;
+  const bruto  = D.sueldo_base + D.extras_50 + D.extras_100 + D.guardia;
+  const ret    = D.ret_jub + D.ret_ley + D.ret_os;
+  const neto   = bruto - ret;          // neto CORE sin anticipo
+  const ing    = neto + D.pin;         // ingreso total disponible
+  const gf0    = gfMes(0);
+  const libre  = ing - gf0.total - D.ptdc;
   const sfClass = libre>=0 ? (libre>150000?'g':'w') : 'r';
 
   document.getElementById('k-res').innerHTML = `
-    <div class="kpi g"><label>Ingreso total</label><p class="val">${fmt(ing)}</p><p class="sub">Sueldo + extras + guardia + Piñateli</p></div>
-    <div class="kpi r"><label>Gastos fijos</label><p class="val">${fmt(gf0.total)}</p><p class="sub">Incl. alquileres y UVAs</p></div>
-    <div class="kpi w"><label>Pago TDC</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Mínimo estimado agosto</p></div>
-    <div class="kpi ${sfClass}"><label>Saldo libre</label><p class="val">${fmt(libre)}</p><p class="sub">${libre>=0?'Disponible para imprevistos':'Déficit — revisar'}</p></div>
+    <div class="kpi g"><label>Neto CORE (sin anticipo)</label><p class="val">${fmt(neto)}</p><p class="sub">Bruto ${fmt(bruto)} − ret. ${fmt(ret)}</p></div>
+    <div class="kpi g"><label>Ganancia Piñateli</label><p class="val">${fmt(D.pin)}</p><p class="sub">Variable mensual</p></div>
+    <div class="kpi r"><label>Gastos fijos totales</label><p class="val">${fmt(gf0.total)}</p><p class="sub">Incl. alquileres, UVAs, hijos</p></div>
+    <div class="kpi w"><label>Pago TDC</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Mínimo estimado</p></div>
+    <div class="kpi ${sfClass}"><label>Saldo libre</label><p class="val">${fmt(libre)}</p><p class="sub">${libre>=0?'Disponible':'Déficit — revisar'}</p></div>
   `;
 
-  // Radiografía
-  const filas = [
-    ['Sueldo neto CORE', D.sueldo, 'g'],
-    ['Horas extras + guardia pasiva', D.extras+D.guardia, 'g'],
+  // Radiografía completa con desglose de ingresos y retenciones
+  const filas_ing = [
+    ['Sueldo base bruto', D.sueldo_base, 'g'],
+    ['Horas extras 50% (3hs)', D.extras_50, 'g'],
+    ['Horas extras 100% (3hs)', D.extras_100, 'g'],
+    ['Adicional Guardia Pasiva', D.guardia, 'g'],
+    ['— Jubilación 11%', -D.ret_jub, 'r'],
+    ['— Ley 19.032 3%', -D.ret_ley, 'r'],
+    ['— Obra Social 3%', -D.ret_os, 'r'],
+  ];
+  const filas_gas = [
     ['Ganancia neta Piñateli', D.pin, 'g'],
     ['Alq. propio (ajustó jul-26)', -gf0.a1, 'r'],
     ['Alq. mamá (ajusta ago-26)', -gf0.a2, 'r'],
@@ -793,32 +867,43 @@ function renderResumen(){
     ['Contador Piñateli', -D.cont, 'r'],
     ['Autónomo Piñateli', -D.auto_, 'r'],
     ['Monotributo + IB Piñateli', -D.mono, 'r'],
+    ['Hijos — voley y gastos varios', -D.hijos, 'r'],
     ['UVA Préstamo 1', -gf0.uva1, 'r'],
     ['UVA Préstamo 2', -UVA2, 'r'],
     ['Pago TDC', -D.ptdc, 'r'],
   ];
-  let h = '<thead><tr><th>Concepto</th><th>Importe</th><th>% ingreso</th></tr></thead><tbody>';
-  filas.forEach(([l,v,c])=>{
-    const pct = Math.abs(Math.round(v/ing*100));
-    h += `<tr><td>${l}</td><td class="num-${c}">${fmt(v)}</td><td class="num-${c}">${pct}%</td></tr>`;
+
+  let h = '<thead><tr><th>Concepto</th><th>Importe</th><th>% bruto</th></tr></thead><tbody>';
+  // Bloque ingresos CORE
+  h += `<tr style="background:var(--bg);"><td colspan="3" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);padding:8px 6px 4px;">💼 Ingresos CORE — bruto a neto</td></tr>`;
+  filas_ing.forEach(([l,v,c])=>{
+    const p = Math.abs(Math.round(v/bruto*100));
+    h += `<tr><td>${l}</td><td class="num-${c}">${fmt(v)}</td><td class="num-${c}">${p}%</td></tr>`;
+  });
+  h += `<tr style="font-weight:700;background:rgba(21,101,192,.05);"><td>= Neto CORE</td><td class="num-b">${fmt(neto)}</td><td class="num-b">${Math.round(neto/bruto*100)}%</td></tr>`;
+  // Bloque gastos
+  h += `<tr style="background:var(--bg);"><td colspan="3" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);padding:8px 6px 4px;">📤 Ingresos adicionales y gastos</td></tr>`;
+  filas_gas.forEach(([l,v,c])=>{
+    const p = Math.abs(Math.round(v/ing*100));
+    h += `<tr><td>${l}</td><td class="num-${c}">${fmt(v)}</td><td class="num-${c}">${p}%</td></tr>`;
   });
   const lc = libre>=0?'num-g':'num-r';
-  h += `<tr class="total-row"><td>Saldo libre</td><td class="${lc}">${fmt(libre)}</td><td class="${lc}">${Math.round(libre/ing*100)}%</td></tr></tbody>`;
+  h += `<tr class="total-row"><td>✅ Saldo libre</td><td class="${lc}">${fmt(libre)}</td><td class="${lc}">${Math.round(libre/ing*100)}%</td></tr></tbody>`;
   document.getElementById('tb-radiografia').innerHTML = h;
 
   // Alert principal
   const alMain = document.getElementById('al-res-main');
   if(libre < 0)
-    alMain.innerHTML = `<div class="alert r"><span class="ico">🔴</span><span><strong>Déficit de ${fmt(Math.abs(libre))}</strong> — Los gastos superan el ingreso. Aumentá ventas de Piñateli o revisá algún gasto.</span></div>`;
+    alMain.innerHTML = `<div class="alert r"><span class="ico">🔴</span><span><strong>Déficit de ${fmt(Math.abs(libre))}</strong> — Los gastos superan el ingreso neto. Aumentá ventas de Piñateli o revisá algún gasto.</span></div>`;
   else if(libre < 80000)
-    alMain.innerHTML = `<div class="alert w"><span class="ico">🟡</span><span><strong>Margen ajustado (${fmt(libre)})</strong> — Funciona pero sin colchón para imprevistos. Cuidado con gastos inesperados.</span></div>`;
+    alMain.innerHTML = `<div class="alert w"><span class="ico">🟡</span><span><strong>Margen ajustado (${fmt(libre)})</strong> — Sin colchón para imprevistos. Cuidado este mes.</span></div>`;
   else
-    alMain.innerHTML = `<div class="alert ok"><span class="ico">🟢</span><span><strong>Presupuesto equilibrado</strong> — Tenés ${fmt(libre)} libres este mes para imprevistos o pago extra de TDC.</span></div>`;
+    alMain.innerHTML = `<div class="alert ok"><span class="ico">🟢</span><span><strong>Presupuesto equilibrado</strong> — ${fmt(libre)} libres. Neto CORE real después de retenciones: <strong>${fmt(neto)}</strong>.</span></div>`;
 
   // Donut
-  const vals = [gf0.a1, gf0.a2, D.mercado, D.serv, D.cont+D.auto_+D.mono, gf0.uva1, UVA2, D.ptdc, D.pin, D.extras+D.guardia, Math.max(0,libre)];
-  const labs = ['Alq.propio','Alq.mamá','Comida','TV/cel','Ctr+imp','UVA1','UVA2','TDC','Piñateli','Extras/gdia','Libre'];
-  const cols = ['#1565C0','#7F77DD','#16A05C','#888780','#C07800','#D85A30','#F09595','#E24B4A','#43A047','#90CAF9','#A8DFC3'];
+  const vals = [gf0.a1, gf0.a2, D.mercado, D.serv, D.cont+D.auto_+D.mono, D.hijos, gf0.uva1, UVA2, D.ptdc, D.pin, D.extras_50+D.extras_100+D.guardia, Math.max(0,libre)];
+  const labs = ['Alq.propio','Alq.mamá','Comida','TV/cel','Ctr+imp','Hijos','UVA1','UVA2','TDC','Piñateli','Extras/gdia','Libre'];
+  const cols = ['#1565C0','#7F77DD','#16A05C','#888780','#C07800','#FF7043','#D85A30','#F09595','#E24B4A','#43A047','#90CAF9','#A8DFC3'];
   document.getElementById('ley-donut').innerHTML = labs.map((l,i)=>`<span><span class="dot" style="background:${cols[i]}"></span>${l}</span>`).join('');
   rendChart('cDonut',{type:'doughnut',data:{labels:labs,datasets:[{data:vals,backgroundColor:cols,borderWidth:1,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' ('+Math.round(ctx.raw/ing*100)+'%)'}}}}});
 
@@ -827,9 +912,10 @@ function renderResumen(){
   let alertsHTML = '';
   if(gf0.uva1>0) alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>UVA Préstamo 1 activo hasta octubre: <strong>${fmt(UVA1)}/mes</strong>. Se libera en octubre junto con COPPEL, NBA y GARANTIAYA.</span></div>`;
   alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>Alquiler mamá ajusta <strong>agosto</strong>: de ${fmt(D.alq2)} → <strong>${fmt(alq2(0))}</strong> (+${fmt(alq2(0)-D.alq2)})</span></div>`;
-  alertsHTML += `<div class="alert ok"><span class="ico">🟢</span><span>TOPMEGA es la <strong>última cuota en agosto</strong> (18/18). Desde septiembre liberás ${fmt(25206)}/mes de ese plan.</span></div>`;
-  if(D.pin < 100000) alertsHTML += `<div class="alert r"><span class="ico">🔴</span><span>Piñateli con ventas bajas (${fmt(D.pin)}). Considerá activar estrategias de venta para mejorar el margen mensual.</span></div>`;
-  alMes.innerHTML = alertsHTML || '<div class="alert ok"><span class="ico">🟢</span><span>Sin alertas críticas este mes.</span></div>';
+  alertsHTML += `<div class="alert ok"><span class="ico">🟢</span><span>TOPMEGA es la <strong>última cuota en agosto</strong> (18/18). Desde septiembre liberás ${fmt(25206)}/mes.</span></div>`;
+  if(D.pin < 100000) alertsHTML += `<div class="alert r"><span class="ico">🔴</span><span>Piñateli con ventas bajas (${fmt(D.pin)}). Considerá activar estrategias de venta.</span></div>`;
+  alertsHTML += `<div class="alert b"><span class="ico">ℹ️</span><span>Retenciones de ley descontadas del bruto: Jub. 11% (${fmt(D.ret_jub)}) + Ley 19.032 3% (${fmt(D.ret_ley)}) + Obra Social 3% (${fmt(D.ret_os)}) = <strong>${fmt(ret)}</strong></span></div>`;
+  alMes.innerHTML = alertsHTML;
 }
 
 // ══════════════════════════════════════════════
@@ -857,7 +943,7 @@ function renderAlquiler(){
     {label:'Total',data:tots,borderColor:'#E24B4A',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[8,4]},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000))+'k',maxTicksLimit:5},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}}}}});
 
-  let tbl='<thead><tr><th>Mes</th><th>Alq. propio</th><th>Alq. mamá</th><th>Total</th><th>Δ vs ant.</th><th>Semáforo</th></tr></thead><tbody>';
+  let tbl='<thead><tr><th>Mes</th><th>Alq. propio</th><th>Alq. mamá</th><th>Total</th><th>Δ vs ant.</th><th>🚦</th></tr></thead><tbody>';
   for(let i=0;i<12;i++){
     const a=alq1(i),b=alq2(i),tot=a+b;
     const delta=i>0?tot-(alq1(i-1)+alq2(i-1)):0;
@@ -867,11 +953,37 @@ function renderAlquiler(){
     const sf=ADJ1.includes(i)||ADJ2.includes(i)?'🔴':'🟢';
     tbl+=`<tr><td>${MESES_F[i]}${b1}${b2}</td><td>${fmt(a)}</td><td>${fmt(b)}</td><td><strong>${fmt(tot)}</strong></td><td class="${dc}">${i>0?sign(delta):'—'}</td><td>${sf}</td></tr>`;
   }
-  tbl+='</tbody>';
+  // Totales anuales
+  const totalA1 = a1s.reduce((s,v)=>s+v,0);
+  const totalA2 = a2s.reduce((s,v)=>s+v,0);
+  const totalTot = tots.reduce((s,v)=>s+v,0);
+  tbl+=`</tbody><tfoot>
+    <tr style="background:rgba(21,101,192,.05);">
+      <td><strong>Total anual (12 meses)</strong></td>
+      <td class="num-b"><strong>${fmt(totalA1)}</strong></td>
+      <td class="num-b"><strong>${fmt(totalA2)}</strong></td>
+      <td class="num-b"><strong>${fmt(totalTot)}</strong></td>
+      <td colspan="2" style="color:var(--text3);font-size:11px;">≈ ${fmt(Math.round(totalTot/12))}/mes promedio</td>
+    </tr>
+  </tfoot>`;
   document.getElementById('tb-alq').innerHTML=tbl;
 
   const impAnual = tots[11]-tots[0];
   document.getElementById('al-alq-imp').innerHTML=`<div class="alert w"><span class="ico">📊</span><span>En 12 meses los alquileres combinados pasan de <strong>${fmt(tots[0])}</strong> a <strong>${fmt(tots[11])}</strong> — un aumento de <strong>${fmt(impAnual)}</strong> anuales. Este es el principal riesgo inflacionario de tu presupuesto: equivale a <strong>${fmt(Math.round(impAnual/12))}/mes extra</strong> en promedio.</span></div>`;
+}
+
+function setTDCScenario(sc){
+  const escenarios = { min:356000, med:500000, max:700000, cus: D.ptdc };
+  D.ptdc = escenarios[sc] || D.ptdc;
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('sc-active'));
+  document.getElementById('sc-'+sc)?.classList.add('sc-active');
+  const cusRow = document.getElementById('tdc-custom-row');
+  if(cusRow) cusRow.style.display = sc==='cus' ? 'flex' : 'none';
+  if(sc!=='cus'){
+    const inp = document.getElementById('tdc-custom-val');
+    if(inp) inp.value = D.ptdc;
+  }
+  renderTDC(); renderResumen(); renderProy();
 }
 
 // ══════════════════════════════════════════════
@@ -879,10 +991,10 @@ function renderAlquiler(){
 // ══════════════════════════════════════════════
 function renderTDC(){
   const tem = D.tem/100;
-  let d=D.deuda, sds=[d], acs=[0], pa=0, ml=null;
+  let d=D.deuda, sds=[d], acs=[0], pa=0, ml=null, totalInt=0;
   const ML=['Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
   for(let i=0;i<7;i++){
-    const int=d*tem; d+=int;
+    const int=d*tem; d+=int; totalInt+=int;
     let p=D.ptdc; if(i>=2&&d>0) p=D.ptdc+UVA1;
     const pr=Math.min(p,d); d=Math.max(0,d-pr); pa+=pr;
     sds.push(Math.round(d)); acs.push(Math.round(pa));
@@ -893,11 +1005,19 @@ function renderTDC(){
   const ceroMes = ml||'>Feb-27';
   const ceroClass = ['Ago','Sep','Oct','Nov'].includes(ml)?'g':'w';
 
+  // Update inline stats
+  const paEl = document.getElementById('tdc-pago-actual');
+  if(paEl) paEl.textContent = fmt(D.ptdc);
+  const ciEl = document.getElementById('tdc-cero-inline');
+  if(ciEl){ ciEl.textContent = ceroMes; ciEl.className = 'num-'+ceroClass; }
+  const itEl = document.getElementById('tdc-int-total');
+  if(itEl) itEl.textContent = fmt(Math.round(totalInt));
+
   document.getElementById('k-tdc').innerHTML=`
     <div class="kpi r"><label>Deuda TDC actual</label><p class="val">${fmt(D.deuda)}</p><p class="sub">Post pagos jul-26</p></div>
     <div class="kpi w"><label>TEM mensual</label><p class="val">${fmtP(D.tem)}</p><p class="sub">Sube desde ago-26</p></div>
-    <div class="kpi w"><label>Pago mínimo ago</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Estimado</p></div>
-    <div class="kpi ${ceroClass}"><label>Deuda cero estimada</label><p class="val">${ceroMes}</p><p class="sub">Con UVA1 desde oct</p></div>
+    <div class="kpi w"><label>Pago mensual</label><p class="val">${fmt(D.ptdc)}</p><p class="sub">Escenario seleccionado</p></div>
+    <div class="kpi ${ceroClass}"><label>Deuda cero</label><p class="val">${ceroMes}</p><p class="sub">Intereses: ${fmt(Math.round(totalInt))}</p></div>
   `;
 
   rendChart('cTDC',{type:'line',data:{labels:['Hoy',...ML],datasets:[
@@ -928,7 +1048,7 @@ function renderProy(){
   const sds=[],sups=[],ahos=[],rows=[];
   for(let i=0;i<12;i++){
     const gf=gfMes(i);
-    const ing=D.sueldo+D.extras+D.guardia+D.pin;
+    const ing=netoReal()+D.pin;
     const int=Math.round(deuda*tem); deuda+=int;
     let p=D.ptdc; if(i>=2&&deuda>0) p=D.ptdc+UVA1;
     const pr=Math.min(p,deuda); deuda=Math.max(0,deuda-pr);
@@ -964,15 +1084,14 @@ function renderProy(){
 // HELPERS COMPARTIDOS FONDOS
 // ══════════════════════════════════════════════
 function superavitPostDeuda(){
-  // Superávit mensual estimado desde nov-26 (sin TDC ni UVA1)
-  const ing = D.sueldo + D.extras + D.guardia + D.pin;
-  const gf  = gfMes(3); // nov-26 (idx 3): sin UVA1, con alquileres ajustados
+  const neto = netoReal();
+  const ing  = neto + D.pin;
+  const gf   = gfMes(3); // nov-26 sin UVA1, con alquileres ajustados
   return Math.max(0, ing - gf.total);
 }
 
 function metaFE(){
-  // Meta fondo emergencia = N meses de gastos fijos
-  const gf = gfMes(3); // nov-26 como referencia
+  const gf = gfMes(3);
   return Math.round(gf.total * D.meta_fe_meses);
 }
 
@@ -984,46 +1103,48 @@ const MESES_EXT = ['Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','
 function renderEmergencia(){
   const sup    = superavitPostDeuda();
   const mfe    = metaFE();
-  const amesFE = Math.round(sup * D.pct_fe / 100);
+  const pctFE  = D.pct_fe;
+  const pctINV = Math.max(0, 100 - pctFE);
+  const amesFE = Math.round(sup * pctFE / 100);
+  const amesINV= Math.round(sup * pctINV / 100);
   const saldo0 = D.saldo_fe_actual;
   const falta  = Math.max(0, mfe - saldo0);
   const mesesFE = amesFE > 0 ? Math.ceil(falta / amesFE) : 99;
+  const paralelo = pctINV > 0;
 
   // Update controles
   const feCtrl = document.getElementById('fe-pct-ctrl');
-  if(feCtrl) feCtrl.textContent = D.pct_fe + '%';
+  if(feCtrl) feCtrl.textContent = pctFE + '%';
   const feMeses = document.getElementById('fe-meses-label');
   if(feMeses) feMeses.textContent = D.meta_fe_meses;
   const feSaldoActual = document.getElementById('fe-saldo-actual-label');
   if(feSaldoActual) feSaldoActual.textContent = fmt(saldo0);
 
-  // KPIs
   const pctCompletado = Math.min(100, Math.round(saldo0/mfe*100));
   document.getElementById('fe-kpis').innerHTML=`
     <div class="split-kpi"><label>Meta total</label><div class="sv b">${fmt(mfe)}</div></div>
     <div class="split-kpi"><label>Ya acumulado</label><div class="sv b">${fmt(saldo0)}</div></div>
     <div class="split-kpi"><label>Falta</label><div class="sv w">${fmt(falta)}</div></div>
-    <div class="split-kpi"><label>Ahorro/mes</label><div class="sv b">${fmt(amesFE)}</div></div>
-    <div class="split-kpi"><label>Meses restantes</label><div class="sv ${mesesFE<=6?'g':'w'}">${mesesFE >= 99 ? '—' : mesesFE}</div></div>
+    <div class="split-kpi"><label>Ahorro/mes (${pctFE}%)</label><div class="sv b">${fmt(amesFE)}</div></div>
+    <div class="split-kpi"><label>Meses restantes</label><div class="sv ${mesesFE<=9?'g':'w'}">${mesesFE >= 99 ? '—' : mesesFE}</div></div>
+    ${paralelo?`<div class="split-kpi"><label>Inv. paralela/mes (${pctINV}%)</label><div class="sv g">${fmt(amesINV)}</div></div>`:''}
   `;
 
-  // Progress bar
   document.getElementById('fe-bar').style.width = pctCompletado + '%';
   document.getElementById('fe-pct-label').textContent = pctCompletado + '%';
   document.getElementById('fe-meta-label').textContent = 'Meta: ' + fmt(mfe);
   document.getElementById('fe-badge').textContent = pctCompletado >= 100 ? '✅ Completado' : `Fase 1 — ${pctCompletado}%`;
 
-  // Acumulación mes a mes (desde nov-26 = idx 0)
+  // Acumulación mes a mes
   const acums = [], labels = [];
   let ac = saldo0;
   for(let i=0;i<18;i++){
-    ac = Math.min(mfe, ac + (i>0 ? amesFE : 0));
+    if(i>0) ac = Math.min(mfe, ac + amesFE);
     acums.push(Math.round(ac));
     labels.push(MESES_EXT[i]);
-    if(ac >= mfe) break;
+    if(ac >= mfe && i>0) break;
   }
-  // rellenar si necesario
-  while(acums.length < 12){ acums.push(mfe); labels.push(MESES_EXT[acums.length]); }
+  while(acums.length < 12){ acums.push(mfe); labels.push(MESES_EXT[acums.length-1]||''); }
 
   rendChart('cFE',{type:'line',data:{labels,datasets:[
     {data:acums,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.1)',fill:true,tension:0.3,pointRadius:4,
@@ -1033,24 +1154,24 @@ function renderEmergencia(){
     scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
 
   // Timeline
-  const mesMeta = mesesFE < 99 ? MESES_EXT[Math.min(mesesFE, MESES_EXT.length-1)] + '-' + (mesesFE<=2?'26':mesesFE<=14?'27':'28') : '—';
-  const fase1 = fmt(Math.round(mfe/3));
-  const fase2 = fmt(Math.round(mfe*2/3));
+  const mesMeta = mesesFE < 99
+    ? MESES_EXT[Math.min(mesesFE, MESES_EXT.length-1)] + '-' + (mesesFE<=2?'26':mesesFE<=14?'27':'28')
+    : '—';
   document.getElementById('tl-fe').innerHTML = `
     <div class="tl-item">
       <div class="tl-dot-col"><div class="tl-dot" style="background:#1565C0"></div></div>
       <div class="tl-body">
         <div class="tl-mes">Nov-26</div>
         <div class="tl-title">Inicio del fondo 🟢</div>
-        <div class="tl-impact num-b">TDC cancelada · Empieza el ahorro con ${fmt(amesFE)}/mes</div>
+        <div class="tl-impact num-b">${fmt(amesFE)}/mes al fondo emergencia${paralelo ? ` · ${fmt(amesINV)}/mes a inversión (paralelo)` : ''}</div>
       </div>
     </div>
     <div class="tl-item">
       <div class="tl-dot-col"><div class="tl-dot" style="background:#42A5F5"></div></div>
       <div class="tl-body">
-        <div class="tl-mes">~${mesesFE<=6?MESES_EXT[Math.ceil(mesesFE/2)]+'-27':'Var'}</div>
+        <div class="tl-mes">~${MESES_EXT[Math.ceil(mesesFE/2)]}-27</div>
         <div class="tl-title">Fondo = 1 mes de gastos</div>
-        <div class="tl-impact num-b">Meta parcial: ${fase1}</div>
+        <div class="tl-impact num-b">Meta parcial: ${fmt(Math.round(mfe/D.meta_fe_meses))}</div>
       </div>
     </div>
     <div class="tl-item">
@@ -1058,7 +1179,7 @@ function renderEmergencia(){
       <div class="tl-body">
         <div class="tl-mes">~${mesMeta}</div>
         <div class="tl-title">🎉 Fondo de emergencia completo (${D.meta_fe_meses} meses)</div>
-        <div class="tl-impact num-g">Meta alcanzada: ${fmt(mfe)} · Pasás a Fase 2: Inversión</div>
+        <div class="tl-impact num-g">Meta: ${fmt(mfe)} · Desde aquí el 100% del superávit va a inversión</div>
       </div>
     </div>
     <div class="tl-item">
@@ -1071,11 +1192,11 @@ function renderEmergencia(){
     </div>
   `;
 
-  document.getElementById('al-fe').innerHTML = mesesFE < 99
-    ? `<div class="alert ok"><span class="ico">🛡️</span><span>Con <strong>${fmt(amesFE)}/mes</strong> (${D.pct_fe}% del superávit), completás el fondo de emergencia de <strong>${D.meta_fe_meses} meses</strong> (${fmt(mfe)}) en aproximadamente <strong>${mesesFE} meses</strong> desde noviembre. A partir de ahí, el resto del superávit pasa a inversión.</span></div>`
-    : `<div class="alert w"><span class="ico">⚠️</span><span>Con el superávit actual no alcanza para llenar el fondo de emergencia. Revisá si podés aumentar las ventas de Piñateli o reducir algún gasto.</span></div>`;
+  const alertMsg = paralelo
+    ? `Con <strong>${fmt(amesFE)}/mes</strong> al fondo de emergencia y <strong>${fmt(amesINV)}/mes</strong> en paralelo a inversión, el fondo de ${D.meta_fe_meses} meses (${fmt(mfe)}) estará completo en ~<strong>${mesesFE} meses</strong>. Estrategia optimizada: ambos fondos crecen simultáneamente.`
+    : `Con <strong>${fmt(amesFE)}/mes</strong> (100% del superávit) el fondo estará completo en ~<strong>${mesesFE} meses</strong>. Para acortar el plazo, usá el control de % para enviar algo a inversión en paralelo.`;
+  document.getElementById('al-fe').innerHTML = `<div class="alert ${mesesFE<=12?'ok':'w'}"><span class="ico">${mesesFE<=12?'🛡️':'⏳'}</span><span>${alertMsg}</span></div>`;
 
-  // Sincronizar inversión con el % restante
   renderInversion();
 }
 
@@ -1084,32 +1205,28 @@ function renderEmergencia(){
 // ══════════════════════════════════════════════
 function renderInversion(){
   const sup      = superavitPostDeuda();
-  const pctInv   = Math.max(0, 100 - D.pct_fe);
-  const amesINV  = Math.round(sup * pctInv / 100);
+  const pctINV   = Math.max(0, 100 - D.pct_fe);
+  const amesINV  = Math.round(sup * pctINV / 100);
   const rentMens = D.rent_inv / 100 / 12;
   const meta     = D.meta_inv;
+  const mfe      = metaFE();
+  const amesFE   = Math.round(sup * D.pct_fe / 100);
+  const mesesFE  = amesFE > 0 ? Math.ceil(Math.max(0, mfe - D.saldo_fe_actual) / amesFE) : 12;
 
   // Update controles
   const invRent = document.getElementById('inv-rent-label');
   if(invRent) invRent.textContent = D.rent_inv + '% TNA';
   const invPctResto = document.getElementById('inv-pct-resto');
-  if(invPctResto) invPctResto.textContent = pctInv + '%';
+  if(invPctResto) invPctResto.textContent = pctINV + '% del superávit';
 
-  // Calcular cuándo termina el fondo emergencia para saber cuándo arranca la inversión
-  const mfe   = metaFE();
-  const amesFE = Math.round(sup * D.pct_fe / 100);
-  const mesesFE = amesFE > 0 ? Math.ceil(Math.max(0, mfe - D.saldo_fe_actual) / amesFE) : 12;
-
-  // Acumulación con rendimiento
+  // Calcular acumulación: inversión arranca en paralelo desde nov-26 con pctINV
+  // Cuando se completa el FE (mesesFE), pasa a 100% del superávit
   const acums_cap = [], acums_rend = [], labels_inv = [];
   let cap = 0, total = 0;
   for(let i=0;i<24;i++){
-    if(i >= mesesFE){ // empieza a invertir cuando termina el fondo emergencia
-      cap   += amesINV;
-      total  = total * (1 + rentMens) + amesINV;
-    } else {
-      total  = total * (1 + rentMens);
-    }
+    const amesEste = i < mesesFE ? amesINV : (amesINV + amesFE); // cuando FE está completo, suma lo que iba al FE
+    cap   += amesEste;
+    total  = total * (1 + rentMens) + amesEste;
     acums_cap.push(Math.round(cap));
     acums_rend.push(Math.max(0, Math.round(total - cap)));
     labels_inv.push(MESES_EXT[i] || '');
@@ -1117,17 +1234,16 @@ function renderInversion(){
   }
   while(acums_cap.length < 12){ acums_cap.push(acums_cap[acums_cap.length-1]||0); acums_rend.push(acums_rend[acums_rend.length-1]||0); labels_inv.push(MESES_EXT[acums_cap.length-1]||''); }
 
-  const totalFinal = acums_cap[acums_cap.length-1] + acums_rend[acums_rend.length-1];
+  const totalFinal = (acums_cap[acums_cap.length-1]||0) + (acums_rend[acums_rend.length-1]||0);
   const pctCompletado = Math.min(100, Math.round(totalFinal/meta*100));
   const mesesMeta = acums_cap.findIndex((_,i)=>(acums_cap[i]+acums_rend[i])>=meta);
-  const mesesMetaTotal = mesesMeta >= 0 ? mesesMeta + mesesFE : null;
 
   document.getElementById('inv-kpis').innerHTML=`
-    <div class="split-kpi"><label>Empieza en</label><div class="sv g">~${mesesFE} meses</div></div>
-    <div class="split-kpi"><label>Ahorro/mes</label><div class="sv g">${fmt(amesINV)}</div></div>
-    <div class="split-kpi"><label>Meta</label><div class="sv w">${fmt(meta)}</div></div>
+    <div class="split-kpi"><label>Arranca</label><div class="sv g">Nov-26 (paralelo)</div></div>
+    <div class="split-kpi"><label>Ahorro/mes fase 1</label><div class="sv g">${fmt(amesINV)}</div></div>
+    <div class="split-kpi"><label>Ahorro/mes fase 2</label><div class="sv g">${fmt(amesINV+amesFE)}</div></div>
     <div class="split-kpi"><label>Rentabilidad</label><div class="sv g">${D.rent_inv}% TNA</div></div>
-    <div class="split-kpi"><label>Total estimado (12m)</label><div class="sv g">${fmt(totalFinal)}</div></div>
+    <div class="split-kpi"><label>Total estimado (al alcanzar FE)</label><div class="sv g">${fmt(Math.round((acums_cap[Math.min(mesesFE,acums_cap.length-1)]||0)+(acums_rend[Math.min(mesesFE,acums_rend.length-1)]||0)))}</div></div>
   `;
 
   document.getElementById('inv-bar').style.width = pctCompletado + '%';
@@ -1135,42 +1251,50 @@ function renderInversion(){
   document.getElementById('inv-meta-label').textContent = 'Meta: ' + fmt(meta);
   document.getElementById('inv-badge').textContent = pctCompletado >= 100 ? '✅ Meta alcanzada' : `Fase 2 — ${pctCompletado}%`;
 
-  const totales = acums_cap.map((c,i)=>c+acums_rend[i]);
+  const totales = acums_cap.map((c,i)=>c+(acums_rend[i]||0));
+  // Marcar el mes donde cambia la fase (FE completo)
+  const bgs = acums_cap.map((_,i)=>i<mesesFE?'rgba(22,160,92,.5)':'rgba(22,160,92,.85)');
   rendChart('cINV',{type:'bar',data:{labels:labels_inv,datasets:[
-    {label:'Capital propio',data:acums_cap,backgroundColor:'rgba(22,160,92,.7)',borderRadius:4,stack:'s'},
+    {label:'Capital',data:acums_cap,backgroundColor:bgs,borderRadius:4,stack:'s'},
     {label:'Rendimiento',data:acums_rend,backgroundColor:'rgba(165,214,167,.8)',borderRadius:4,stack:'s'},
     {data:Array(labels_inv.length).fill(meta),type:'line',borderColor:'#66BB6A',fill:false,borderDash:[6,4],pointRadius:0,borderWidth:1.5,stack:undefined}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},
-    scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'},stacked:true},x:{grid:{display:false},stacked:true,ticks:{font:{size:10}}}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+    title:ctx=>`${ctx[0].label} — Total: ${fmt(totales[ctx[0].dataIndex]||0)}`,
+    label:c=>' '+c.dataset.label+': '+fmt(c.raw)
+  }}},
+    scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:4},grid:{color:'rgba(0,0,0,.05)'},stacked:true},
+            x:{grid:{display:false},stacked:true,ticks:{font:{size:10}}}}}});
 
-  // Timeline inversión
-  const mesInicioInv = MESES_EXT[mesesFE] + '-' + (mesesFE<=2?'26':mesesFE<=14?'27':'28');
+  // Timeline
+  const mesMetaLabel = mesesMeta >= 0
+    ? MESES_EXT[mesesMeta] + '-' + (mesesMeta<=2?'26':mesesMeta<=14?'27':'28')
+    : '—';
   document.getElementById('tl-inv').innerHTML = `
     <div class="tl-item">
-      <div class="tl-dot-col"><div class="tl-dot" style="background:#C9CFD8"></div></div>
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#43A047"></div></div>
       <div class="tl-body">
-        <div class="tl-mes">Nov-26 a ~${MESES_EXT[mesesFE-1]}-27</div>
-        <div class="tl-title">Construyendo fondo emergencia 🛡️</div>
-        <div class="tl-impact" style="color:var(--text3);">El 100% del ahorro va al fondo de emergencia primero</div>
+        <div class="tl-mes">Nov-26</div>
+        <div class="tl-title">🚀 Inversión arranca en paralelo</div>
+        <div class="tl-impact num-g">${fmt(amesINV)}/mes (${pctINV}% del superávit) mientras construís el fondo de emergencia</div>
       </div>
     </div>
     <div class="tl-item">
       <div class="tl-dot-col"><div class="tl-dot" style="background:#16A05C"></div></div>
       <div class="tl-body">
-        <div class="tl-mes">~${mesInicioInv}</div>
-        <div class="tl-title">🚀 Arrancan las inversiones</div>
-        <div class="tl-impact num-g">${fmt(amesINV)}/mes · ${pctInv}% del superávit · Rentabilidad ${D.rent_inv}% TNA</div>
+        <div class="tl-mes">~${MESES_EXT[Math.min(mesesFE,MESES_EXT.length-1)]}-27</div>
+        <div class="tl-title">Fondo emergencia completo → Fase 2</div>
+        <div class="tl-impact num-g">Ahorro sube a ${fmt(amesINV+amesFE)}/mes (100% del superávit a inversión)</div>
       </div>
     </div>
-    ${mesesMetaTotal ? `
+    ${mesesMeta>=0?`
     <div class="tl-item">
-      <div class="tl-dot-col"><div class="tl-dot" style="background:#43A047"></div></div>
+      <div class="tl-dot-col"><div class="tl-dot" style="background:#1B5E20"></div></div>
       <div class="tl-body">
-        <div class="tl-mes">~${mesesMetaTotal} meses desde nov-26</div>
+        <div class="tl-mes">~${mesMetaLabel}</div>
         <div class="tl-title">🎉 Meta de inversión alcanzada</div>
         <div class="tl-impact num-g">${fmt(meta)} acumulados (capital + rendimiento)</div>
       </div>
-    </div>` : ''}
+    </div>`:''}
     <div class="tl-item">
       <div class="tl-dot-col"><div class="tl-dot" style="background:#C07800"></div></div>
       <div class="tl-body">
@@ -1181,7 +1305,8 @@ function renderInversion(){
     </div>
   `;
 
-  document.getElementById('al-inv').innerHTML = `<div class="alert ok"><span class="ico">📈</span><span>Empezás a invertir ~<strong>${fmt(amesINV)}/mes</strong> después de completar el fondo de emergencia. Con una rentabilidad del <strong>${D.rent_inv}% TNA</strong>, el rendimiento acumulado empieza a hacer diferencia a partir del 3er mes de inversión.</span></div>`;
+  const ahorro_paralelo = `Gracias a la estrategia paralela, ya tenés <strong>${fmt(Math.round(totalFinal))}</strong> acumulados al momento de completar el fondo de emergencia. Esto es lo que diferencia el enfoque paralelo del secuencial: el dinero ya está trabajando desde el primer mes.`;
+  document.getElementById('al-inv').innerHTML = `<div class="alert ok"><span class="ico">📈</span><span>${ahorro_paralelo}</span></div>`;
 }
 
 // ══════════════════════════════════════════════
