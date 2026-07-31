@@ -412,6 +412,7 @@
     <button class="tab" onclick="ST('proy')">📈 Proyección 12M</button>
     <button class="tab" onclick="ST('emergen')">🛡️ Fondo emergencia</button>
     <button class="tab" onclick="ST('invest')">📈 Ahorro / inversión</button>
+    <button class="tab" onclick="ST('retiro')">🌱 Retiro / vejez</button>
   </div>
 
   <!-- ══ TAB RESUMEN ══ -->
@@ -502,9 +503,23 @@
     </div>
     <div class="card">
       <div class="card-title"><span>🔓</span> Cuotas activas y liberación de fondos</div>
-      <table id="tb-cuotas"></table>
+      <table>
+        <thead><tr><th>Préstamo / compra</th><th>Cuota actual</th><th>Próx. cuota (ago)</th><th>Saldo aprox.</th><th>Termina</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>TOPMEGA (TDC)</td><td style="text-align:right">18/18</td><td style="text-align:right">$25.206</td><td style="text-align:right">—</td><td style="text-align:right">Ago-26</td><td><span class="pill pill-g">✓ Última</span></td></tr>
+          <tr><td>COPPEL (TDC)</td><td style="text-align:right">10/12</td><td style="text-align:right">$55.069</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">3 cuotas</span></td></tr>
+          <tr><td>MP*GARANTIAYA (TDC)</td><td style="text-align:right">11/12</td><td style="text-align:right">$26.000</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">2 cuotas</span></td></tr>
+          <tr><td>NBA (TDC)</td><td style="text-align:right">06/09</td><td style="text-align:right">$65.555</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">4 cuotas</span></td></tr>
+          <tr style="background:var(--bg-warning)"><td><strong>UVA Préstamo 1</strong> ⚠ actualizado</td><td style="text-align:right">11/12</td><td style="text-align:right"><strong>$250.664</strong></td><td style="text-align:right">~$2.636.867</td><td style="text-align:right"><strong class="num-w">Sep-26 🎉</strong></td><td><span class="pill pill-w">Última en sep</span></td></tr>
+          <tr><td>UVA Préstamo 2 ⚠ actualizado</td><td style="text-align:right">6/18</td><td style="text-align:right">$84.542</td><td style="text-align:right">~$1.197.427</td><td style="text-align:right">Feb-28</td><td><span class="pill pill-r">13 cuotas</span></td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="3"><strong>Fondos liberados desde oct-26</strong></td><td class="num-g" colspan="3"><strong>+$397.288/mes (UVA1 + cuotas TDC)</strong></td></tr>
+        </tfoot>
+      </table>
+      <div class="alert ok" style="margin-top:10px;"><span class="ico">🎉</span><span><strong>Buena noticia:</strong> el UVA Préstamo 1 termina en <strong>septiembre 2026</strong> (cuota 12/12), un mes antes de lo que teníamos. UVA $2.057,99 al 31/07/2026. Esto adelanta la liberación de ~$250.664/mes.</span></div>
     </div>
-    <div class="alert b"><span class="ico">💡</span><span>Desde <strong>noviembre 2026</strong>, al cancelarse la TDC más las cuotas activas (COPPEL, NBA, GARANTIAYA) y el UVA 1, se liberan <strong>~$368.830/mes</strong>. Ese dinero es la base de tu plan de ahorro.</span></div>
+    <div class="alert b"><span class="ico">💡</span><span>Desde <strong>octubre 2026</strong>, al liberarse el UVA 1 y las cuotas TDC (COPPEL, NBA, GARANTIAYA), se liberan <strong>~$397.000/mes</strong>. Desde noviembre, al cancelarse la TDC, el total libre sube a <strong>~$750.000+/mes</strong>.</span></div>
   </div>
 
   <!-- ══ TAB PROYECCIÓN 12M ══ -->
@@ -678,6 +693,94 @@
     <div id="al-inv"></div>
   </div>
 
+  <!-- ══ TAB RETIRO / VEJEZ ══ -->
+  <div id="pane-retiro" class="pane">
+
+    <div class="alert ok"><span class="ico">🌱</span><span><strong>El fondo de retiro es el tercer pilar, el más poderoso a largo plazo.</strong> No es lo mismo que la inversión de mediano plazo. El tiempo es su principal activo: cada peso que ponés hoy vale mucho más que uno puesto en 5 años, gracias al interés compuesto.</span></div>
+
+    <div class="kpi-grid" id="k-ret"></div>
+
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> Parámetros del fondo de retiro</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--text-secondary);">Ahorro mensual destinado a retiro</span>
+            <input type="number" id="ret-aporte" value="80000" step="10000" oninput="renderRetiro()"
+              style="width:120px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;text-align:right;">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--text-secondary);">Arranca en (mes desde hoy)</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button onclick="D.ret_inicio=Math.max(1,D.ret_inicio-1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">−</button>
+              <span style="font-weight:600;min-width:80px;text-align:center;" id="ret-inicio-label">27 meses</span>
+              <button onclick="D.ret_inicio=Math.min(60,D.ret_inicio+1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">+</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--text-secondary);">Horizonte de inversión</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button onclick="D.ret_anos=Math.max(5,D.ret_anos-1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">−</button>
+              <span style="font-weight:600;min-width:80px;text-align:center;" id="ret-anos-label">20 años</span>
+              <button onclick="D.ret_anos=Math.min(35,D.ret_anos+1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">+</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--text-secondary);">Rentabilidad anual en dólares (real)</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button onclick="D.ret_rent=Math.max(2,D.ret_rent-1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">−</button>
+              <span style="font-weight:600;min-width:80px;text-align:center;" id="ret-rent-label">7% anual</span>
+              <button onclick="D.ret_rent=Math.min(15,D.ret_rent+1);renderRetiro()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">+</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
+            <span style="color:var(--text-secondary);">Tipo de cambio USD (referencia)</span>
+            <input type="number" id="ret-tc" value="1435" step="50" oninput="renderRetiro()"
+              style="width:120px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;text-align:right;">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🏆</span> Resultado proyectado</div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="ret-resultado"></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:8px;"><span>📅</span> Hitos del camino</div>
+          <div id="ret-hitos" style="display:flex;flex-direction:column;gap:0;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>📈</span> Curva de capitalización — el efecto del tiempo</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-bottom:8px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span class="dot" style="background:#C07800"></span>Capital aportado</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span class="dot" style="background:#16A05C"></span>Rendimiento acumulado</span>
+        <span style="font-size:11px;color:var(--text-secondary);">Nota: proyección en pesos constantes, rentabilidad referenciada en dólares convertida.</span>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="cRetiro" role="img" aria-label="Curva de capitalización del fondo de retiro a largo plazo."></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🌍</span> ¿Dónde poner el fondo de retiro?</div>
+      <table>
+        <thead><tr><th>Instrumento</th><th>Moneda</th><th>Riesgo</th><th>Por qué para retiro</th></tr></thead>
+        <tbody>
+          <tr><td><strong>CEDEARS S&P 500</strong> (SPY, QQQ)</td><td>USD</td><td><span class="pill pill-w">Medio</span></td><td>Diversificación global · histórico +10% anual USD · comprable desde Argentina</td></tr>
+          <tr><td><strong>Dólares MEP</strong></td><td>USD</td><td><span class="pill pill-g">Bajo</span></td><td>Reserva de valor · cobertura cambiaria · alta liquidez</td></tr>
+          <tr><td><strong>ONs corporativas USD</strong></td><td>USD</td><td><span class="pill pill-w">Medio</span></td><td>Renta fija en dólares · cupón semestral · diversifica riesgo acción</td></tr>
+          <tr><td><strong>FCI renta variable global</strong></td><td>USD</td><td><span class="pill pill-w">Medio-alto</span></td><td>Gestión profesional · diversificación automática</td></tr>
+          <tr><td><strong>Propiedades</strong></td><td>USD</td><td><span class="pill pill-w">Medio</span></td><td>Activo real · cobertura inflación · renta de alquiler</td></tr>
+        </tbody>
+      </table>
+      <div class="alert w" style="margin-top:10px;"><span class="ico">⚠️</span><span><strong>La jubilación estatal SIPA hoy equivale a menos del 25% de un sueldo promedio.</strong> El retiro privado no es un lujo — es una necesidad. Cuanto antes empezás, menos tenés que aportar cada mes para el mismo resultado.</span></div>
+      <div class="alert b" style="margin-top:8px;"><span class="ico">💡</span><span>Esta información es orientativa. Para armar el portafolio de retiro consultá con un asesor financiero matriculado (CNV) que conozca tu perfil de riesgo.</span></div>
+    </div>
+
+  </div>
+
 </div><!-- /main -->
 
 <script>
@@ -723,10 +826,22 @@ let D = {
   // Ahorro / inversión
   meta_inv: 5000000,
   rent_inv: 50,
+  // Retiro / vejez
+  ret_inicio: 27,   // meses desde hoy (≈ feb-2029, cuando FE esté completo)
+  ret_anos:   20,   // horizonte en años
+  ret_rent:   7,    // rentabilidad anual real en USD (histórico S&P ~10%, real ~7%)
 };
 
-// Gastos fijos UVA y cuotas
-const UVA1 = 242177, UVA2 = 81045;
+// Gastos fijos UVA — datos reales agosto 2026 (UVA = $2.057,99 al 31/07/2026)
+// UVA1 (1.281,49 UVAs, cuota 11/12): próx cuota 121,80 UVA × $2.057,99 = $250.664 · TERMINA SEP-26 (cuota 12/12)
+// UVA2 (581,83 UVAs, cuota 6/18):   próx cuota  41,08 UVA × $2.057,99 = $84.542  · termina feb-28
+const UVA_VALOR = 2057.99;
+const UVA1_CUOTA = Math.round(121.80 * UVA_VALOR); // ~$250.664 — termina SEP-26 (cuota 12)
+const UVA2_CUOTA = Math.round(41.08  * UVA_VALOR); // ~$84.542  — termina feb-28
+const UVA1 = UVA1_CUOTA; // alias legacy
+const UVA2 = UVA2_CUOTA; // alias legacy
+const UVA1_SALDO = Math.round(1281.49 * UVA_VALOR); // ~$2.636.867
+const UVA2_SALDO = Math.round(581.83  * UVA_VALOR); // ~$1.197.427
 const MESES     = ['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
 const MESES_F   = ['Ago-26','Sep-26','Oct-26','Nov-26','Dic-26','Ene-27','Feb-27','Mar-27','Abr-27','May-27','Jun-27','Jul-27'];
 
@@ -752,9 +867,12 @@ function alq1(i){ const n=ADJ1.filter(x=>x<=i).length; return Math.round(D.alq1 
 function alq2(i){ const n=ADJ2.filter(x=>x<=i).length; return Math.round(D.alq2 * Math.pow(1+D.icl/100,n)); }
 function gfMes(i){
   const a1=alq1(i), a2=alq2(i);
-  const uva1 = i<3 ? UVA1 : 0;
-  const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + D.hijos + UVA2;
-  return { a1, a2, uva1, total: a1+a2+base+uva1 };
+  // UVA1 (cuota 11/12 en ago → última cuota en SEP = idx 1, libre desde OCT = idx 2)
+  const uva1 = i<=1 ? UVA1 : 0;
+  // UVA2 (cuota 6/18 en ago → termina feb-28 = idx ~18)
+  const uva2 = i<=17 ? UVA2 : 0;
+  const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + D.hijos + uva2;
+  return { a1, a2, uva1, uva2, total: a1+a2+base+uva1 };
 }
 
 // ══════════════════════════════════════════════
@@ -1310,6 +1428,79 @@ function renderInversion(){
 }
 
 // ══════════════════════════════════════════════
+// RENDER RETIRO / VEJEZ
+// ══════════════════════════════════════════════
+function renderRetiro(){
+  const aporte   = +document.getElementById('ret-aporte')?.value || 80000;
+  const tc       = +document.getElementById('ret-tc')?.value     || 1435;
+  const anos     = D.ret_anos;
+  const inicio   = D.ret_inicio;
+  const rent     = D.ret_rent;
+  const rentMens = Math.pow(1+rent/100,1/12)-1;
+  const totalMeses = anos*12;
+  const mesLabel = inicio<=12?'dic-26':inicio<=24?'2027':'2028/29';
+
+  document.getElementById('ret-inicio-label').textContent = inicio+' meses (~'+mesLabel+')';
+  document.getElementById('ret-anos-label').textContent   = anos+' años';
+  document.getElementById('ret-rent-label').textContent   = rent+'% anual';
+
+  const caps=[],rends=[],labels=[];
+  let cap=0,total=0;
+  for(let i=0;i<totalMeses;i++){
+    total=total*(1+rentMens);
+    if(i>=inicio){cap+=aporte;total+=aporte;}
+    if(i%12===11){
+      const yr=Math.floor(i/12)+1;
+      caps.push(Math.round(cap));
+      rends.push(Math.max(0,Math.round(total-cap)));
+      labels.push('Año '+yr);
+    }
+  }
+
+  const capFin=caps[caps.length-1]||0;
+  const renFin=rends[rends.length-1]||0;
+  const patFin=capFin+renFin;
+  const usdFin=Math.round(patFin/tc);
+  const mult=capFin>0?Math.round(patFin/capFin*10)/10:0;
+  const mefec=Math.max(0,totalMeses-inicio);
+
+  document.getElementById('k-ret').innerHTML=`
+    <div class="kpi w"><label>Aporte mensual</label><p class="val">${fmt(aporte)}</p><p class="sub">Desde mes ${inicio} (~${mesLabel})</p></div>
+    <div class="kpi"><label>Capital aportado</label><p class="val">${fmt(capFin)}</p><p class="sub">${Math.round(mefec/12)} años × ${fmt(aporte)}</p></div>
+    <div class="kpi g"><label>Rendimiento generado</label><p class="val">${fmt(renFin)}</p><p class="sub">Interés compuesto ${rent}% USD</p></div>
+    <div class="kpi g"><label>Patrimonio final</label><p class="val">${fmt(patFin)}</p><p class="sub">≈ US$${usdFin.toLocaleString('es-AR')} · ×${mult}</p></div>
+  `;
+
+  document.getElementById('ret-resultado').innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span style="color:var(--text-secondary);">Meses de aporte</span><strong>${mefec}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span style="color:var(--text-secondary);">Total aportado</span><strong>${fmt(capFin)}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span style="color:var(--text-secondary);">Rendimiento acumulado</span><strong style="color:var(--text-success)">${fmt(renFin)}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span style="color:var(--text-secondary);">Patrimonio en pesos</span><strong style="font-size:16px">${fmt(patFin)}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span style="color:var(--text-secondary);">Patrimonio en USD</span><strong style="font-size:16px;color:var(--text-success)">US$${usdFin.toLocaleString('es-AR')}</strong></div>
+    <div style="margin-top:8px;background:var(--bg-success);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-success);">Cada $1 aportado se convierte en <strong>$${mult}</strong> gracias al interés compuesto.</div>
+  `;
+
+  const hitos=[{yr:1,i:'🌱',t:'Inicio — la disciplina es todo'},{yr:5,i:'🌿',t:'El rendimiento ya nota su presencia'},{yr:10,i:'🌳',t:'El rendimiento supera al capital aportado'},{yr:15,i:'🚀',t:'Zona de aceleración máxima'},{yr:anos,i:'🏆',t:'Meta alcanzada'}];
+  document.getElementById('ret-hitos').innerHTML=hitos.filter(h=>h.yr<=anos).map(h=>{
+    const idx=Math.min(h.yr-1,caps.length-1);
+    const p=(caps[idx]||0)+(rends[idx]||0);
+    return `<div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--text-warning)"></div></div>
+      <div class="tl-body"><div class="tl-mes">Año ${h.yr} ${h.i}</div>
+      <div class="tl-title">${fmt(p)}</div>
+      <div class="tl-impact" style="color:var(--text-secondary);font-size:11px;">${h.t}</div></div></div>`;
+  }).join('');
+
+  rendChart('cRetiro',{type:'bar',data:{labels,datasets:[
+    {label:'Capital',data:caps,backgroundColor:'rgba(192,120,0,.65)',borderRadius:3,stack:'s'},
+    {label:'Rendimiento',data:rends,backgroundColor:'rgba(22,160,92,.7)',borderRadius:3,stack:'s'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+    title:ctx=>`Año ${ctx[0].label.replace('Año ','')} — Total: ${fmt((caps[ctx[0].dataIndex]||0)+(rends[ctx[0].dataIndex]||0))}`,
+    label:c=>' '+c.dataset.label+': '+fmt(c.raw)
+  }}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/1000000*10)/10)+'M',maxTicksLimit:5},grid:{color:'rgba(0,0,0,.05)'},stacked:true},
+              x:{grid:{display:false},stacked:true,ticks:{font:{size:10},maxTicksLimit:10}}}}});
+}
+
+// ══════════════════════════════════════════════
 // SHOW TAB
 // ══════════════════════════════════════════════
 function ST(t){
@@ -1322,6 +1513,7 @@ function ST(t){
   if(t==='proy')     renderProy();
   if(t==='emergen')  renderEmergencia();
   if(t==='invest')   renderInversion();
+  if(t==='retiro')   renderRetiro();
 }
 
 // ══════════════════════════════════════════════
@@ -1334,6 +1526,7 @@ function renderAll(){
   renderProy();
   renderEmergencia();
   renderInversion();
+  renderRetiro();
 }
 
 // Fecha en topbar
