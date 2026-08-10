@@ -1045,7 +1045,7 @@ function renderResumen(){
   // Alertas del mes
   const alMes = document.getElementById('alertas-mes');
   let alertsHTML = '';
-  if(gf0.uva1>0) alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>UVA Préstamo 1 activo hasta octubre: <strong>${fmt(UVA1)}/mes</strong>. Se libera en octubre junto con COPPEL, NBA y GARANTIAYA.</span></div>`;
+  if(gf0.uva1>0) alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>UVA Préstamo 1: última cuota (12/12) vence el <strong>23/08/2026</strong> — ${fmt(UVA1)} este mes. Desde septiembre esos $250.664 quedan libres.</span></div>`;
   alertsHTML += `<div class="alert w"><span class="ico">🟡</span><span>Alquiler mamá ajusta <strong>agosto</strong>: de ${fmt(D.alq2)} → <strong>${fmt(alq2(0))}</strong> (+${fmt(alq2(0)-D.alq2)})</span></div>`;
   alertsHTML += `<div class="alert ok"><span class="ico">🟢</span><span>TOPMEGA es la <strong>última cuota en agosto</strong> (18/18). Desde septiembre liberás ${fmt(25206)}/mes.</span></div>`;
   if(D.pin < 100000) alertsHTML += `<div class="alert r"><span class="ico">🔴</span><span>Piñateli con ventas bajas (${fmt(D.pin)}). Considerá activar estrategias de venta.</span></div>`;
@@ -1130,8 +1130,9 @@ function renderTDC(){
   const ML=['Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
   for(let i=0;i<7;i++){
     const int=d*tem; d+=int; totalInt+=int;
-    let p=D.ptdc; if(i>=2&&d>0) p=D.ptdc+UVA1;
-    const pr=Math.min(p,d); d=Math.max(0,d-pr); pa+=pr;
+    // Pago simple: lo que el usuario decide pagar cada mes
+    // UVA1 ya está como gasto fijo en gfMes, no se suma al pago TDC
+    const pr=Math.min(D.ptdc, d); d=Math.max(0,d-pr); pa+=pr;
     sds.push(Math.round(d)); acs.push(Math.round(pa));
     if(d<=0&&!ml) ml=ML[i]; if(d<=0) break;
   }
@@ -1181,12 +1182,27 @@ function renderProy(){
   const tem=D.tem/100, pctA=D.pct_ahorro/100;
   let deuda=D.deuda, ahorro=0;
   const sds=[],sups=[],ahos=[],rows=[];
+
+  // Cuotas TDC activas desde ago-26:
+  // COPPEL: termina sep-26 (1 cuota más, idx 1)
+  // NBA: termina oct-26 (3 cuotas más, idx 0,1,2)
+  // UVA1: ya la última cuota fue en ago-26 (idx 0) → libre desde sep (idx 1+)
+  // Pago TDC = lo que paga la usuaria + cuotas que vencen ese mes
+  function cuotasActivasMes(i){
+    let c = 0;
+    if(i<=0) c += 25206; // TOPMEGA última en ago (ya pasó pero contamos)
+    if(i<=1) c += 55069; // COPPEL: ago (10/12) y sep (11/12=última)
+    if(i<=2) c += 65555; // NBA: ago(7/9), sep(8/9), oct(9/9=última)
+    return c;
+  }
+
   for(let i=0;i<12;i++){
     const gf=gfMes(i);
     const ing=netoReal()+D.pin;
     const int=Math.round(deuda*tem); deuda+=int;
-    let p=D.ptdc; if(i>=2&&deuda>0) p=D.ptdc+UVA1;
-    const pr=Math.min(p,deuda); deuda=Math.max(0,deuda-pr);
+    // El pago mínimo ya incluye las cuotas activas; solo aplicamos lo que el usuario paga
+    const pr=Math.min(D.ptdc, deuda > 0 ? deuda : 0);
+    deuda=Math.max(0,deuda-pr);
     const sup=ing-gf.total-pr;
     const ames=deuda===0?Math.max(0,Math.round(sup*pctA)):0;
     ahorro+=ames;
