@@ -471,7 +471,7 @@
       <div class="card-title"><span>🎮</span> Simulador de escenario de pago</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="tdc-scenario-btns">
-          <button onclick="setTDCScenario('min')"  class="sc-btn sc-active" id="sc-min">💳 Pago mínimo (~$356k)</button>
+          <button onclick="setTDCScenario('min')"  class="sc-btn sc-active" id="sc-min">💳 Pago mínimo (~$301k)</button>
           <button onclick="setTDCScenario('med')"  class="sc-btn" id="sc-med">💪 Pago medio (~$500k)</button>
           <button onclick="setTDCScenario('max')"  class="sc-btn" id="sc-max">🚀 Pago máximo (~$700k)</button>
           <button onclick="setTDCScenario('cus')"  class="sc-btn" id="sc-cus">✏️ Personalizado</button>
@@ -506,20 +506,20 @@
       <table>
         <thead><tr><th>Préstamo / compra</th><th>Cuota actual</th><th>Próx. cuota (ago)</th><th>Saldo aprox.</th><th>Termina</th><th>Estado</th></tr></thead>
         <tbody>
-          <tr><td>TOPMEGA (TDC)</td><td style="text-align:right">18/18</td><td style="text-align:right">$25.206</td><td style="text-align:right">—</td><td style="text-align:right">Ago-26</td><td><span class="pill pill-g">✓ Última</span></td></tr>
-          <tr><td>COPPEL (TDC)</td><td style="text-align:right">10/12</td><td style="text-align:right">$55.069</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">3 cuotas</span></td></tr>
-          <tr><td>MP*GARANTIAYA (TDC)</td><td style="text-align:right">11/12</td><td style="text-align:right">$26.000</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">2 cuotas</span></td></tr>
-          <tr><td>NBA (TDC)</td><td style="text-align:right">06/09</td><td style="text-align:right">$65.555</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">4 cuotas</span></td></tr>
-          <tr style="background:var(--bg-warning)"><td><strong>UVA Préstamo 1</strong> ⚠ actualizado</td><td style="text-align:right">11/12</td><td style="text-align:right"><strong>$250.664</strong></td><td style="text-align:right">~$2.636.867</td><td style="text-align:right"><strong class="num-w">Sep-26 🎉</strong></td><td><span class="pill pill-w">Última en sep</span></td></tr>
-          <tr><td>UVA Préstamo 2 ⚠ actualizado</td><td style="text-align:right">6/18</td><td style="text-align:right">$84.542</td><td style="text-align:right">~$1.197.427</td><td style="text-align:right">Feb-28</td><td><span class="pill pill-r">13 cuotas</span></td></tr>
+          <tr><td>TOPMEGA (TDC)<span class="pill pill-g">✓ Terminó en ago</span></td><td style="text-align:right">18/18</td><td style="text-align:right" class="num-g">$0 — libre</td><td style="text-align:right">—</td><td style="text-align:right" class="num-g">Ago-26 ✓</td><td><span class="pill pill-g">Finalizado</span></td></tr>
+          <tr><td>COPPEL (TDC)</td><td style="text-align:right">11/12</td><td style="text-align:right">$55.069</td><td style="text-align:right">—</td><td style="text-align:right" class="num-w">Sep-26 (última)</td><td><span class="pill pill-w">1 cuota</span></td></tr>
+          <tr><td>MP*GARANTIAYA (TDC)</td><td style="text-align:right">—</td><td style="text-align:right" class="num-g">$0 — terminó</td><td style="text-align:right">—</td><td style="text-align:right" class="num-g">Terminó ✓</td><td><span class="pill pill-g">Finalizado</span></td></tr>
+          <tr><td>NBA (TDC)</td><td style="text-align:right">07/09</td><td style="text-align:right">$65.555</td><td style="text-align:right">—</td><td style="text-align:right">Oct-26</td><td><span class="pill pill-w">3 cuotas</span></td></tr>
+          <tr style="background:var(--bg-success)"><td><strong>UVA Préstamo 1</strong> — 1.281,49 UVAs</td><td style="text-align:right">12/12 🎉</td><td style="text-align:right"><strong>121,8 UVAs = $250.664</strong></td><td style="text-align:right">$250.664</td><td style="text-align:right"><strong class="num-g">23/08/2026</strong></td><td><span class="pill pill-g">Última cuota ✓</span></td></tr>
+          <tr><td>UVA Préstamo 2 — 581,83 UVAs</td><td style="text-align:right">7/18</td><td style="text-align:right">41,08 UVAs = $84.542</td><td style="text-align:right">~$1.113.000</td><td style="text-align:right">Feb-28</td><td><span class="pill pill-r">12 cuotas</span></td></tr>
         </tbody>
         <tfoot>
           <tr><td colspan="3"><strong>Fondos liberados desde oct-26</strong></td><td class="num-g" colspan="3"><strong>+$397.288/mes (UVA1 + cuotas TDC)</strong></td></tr>
         </tfoot>
       </table>
-      <div class="alert ok" style="margin-top:10px;"><span class="ico">🎉</span><span><strong>Buena noticia:</strong> el UVA Préstamo 1 termina en <strong>septiembre 2026</strong> (cuota 12/12), un mes antes de lo que teníamos. UVA $2.057,99 al 31/07/2026. Esto adelanta la liberación de ~$250.664/mes.</span></div>
+      <div class="alert ok" style="margin-top:10px;"><span class="ico">🎉</span><span><strong>¡La cuota 12/12 del UVA Préstamo 1 vence el 23/08/2026!</strong> 121,8 UVAs = ~$250.664. Es la última — desde septiembre ese dinero queda libre. Junto con COPPEL, NBA y la TDC, desde octubre/noviembre se liberan más de $750.000/mes.</span></div>
     </div>
-    <div class="alert b"><span class="ico">💡</span><span>Desde <strong>octubre 2026</strong>, al liberarse el UVA 1 y las cuotas TDC (COPPEL, NBA, GARANTIAYA), se liberan <strong>~$397.000/mes</strong>. Desde noviembre, al cancelarse la TDC, el total libre sube a <strong>~$750.000+/mes</strong>.</span></div>
+    <div class="alert b"><span class="ico">💡</span><span>Desde <strong>septiembre 2026</strong>, al liberarse el UVA 1 (última cuota 23/08), se libera ~$250.664/mes. Desde <strong>octubre</strong>, al terminar COPPEL y NBA, ~$370.000/mes más. Desde <strong>noviembre</strong>, al cancelarse la TDC, el total libre supera <strong>$750.000/mes</strong>.</span></div>
   </div>
 
   <!-- ══ TAB PROYECCIÓN 12M ══ -->
@@ -805,7 +805,7 @@ let D = {
   ret_ley:     98249,     // ley 19.032 3%
   ret_os:      98249,     // obra social 3%
   pin:      250000,
-  alq1:     1144900,
+  alq1:     1171849,  // alquiler propio real ago-26 (pago confirmado $1.171.848,75)
   alq2:     325000,
   icl:      8.5,
   mercado:  400000,
@@ -814,9 +814,9 @@ let D = {
   auto_:    78000,
   mono:     65000,
   hijos:    200000,       // ← nuevo: voley hijos
-  deuda:    1863340,
-  ptdc:     356000,
-  tem:      8.42,
+  deuda:    2386761,  // deuda TDC real resumen ago-26
+  ptdc:     300570,   // pago mínimo real ago-26
+  tem:      7.13,     // TEM real agosto 2026 (TNA 86,75%)
   pct_ahorro: 40,       // legacy
   meta:     5000000,    // legacy
   // Fondo emergencia
@@ -833,15 +833,31 @@ let D = {
 };
 
 // Gastos fijos UVA — datos reales agosto 2026 (UVA = $2.057,99 al 31/07/2026)
-// UVA1 (1.281,49 UVAs, cuota 11/12): próx cuota 121,80 UVA × $2.057,99 = $250.664 · TERMINA SEP-26 (cuota 12/12)
-// UVA2 (581,83 UVAs, cuota 6/18):   próx cuota  41,08 UVA × $2.057,99 = $84.542  · termina feb-28
-const UVA_VALOR = 2057.99;
-const UVA1_CUOTA = Math.round(121.80 * UVA_VALOR); // ~$250.664 — termina SEP-26 (cuota 12)
-const UVA2_CUOTA = Math.round(41.08  * UVA_VALOR); // ~$84.542  — termina feb-28
-const UVA1 = UVA1_CUOTA; // alias legacy
-const UVA2 = UVA2_CUOTA; // alias legacy
-const UVA1_SALDO = Math.round(1281.49 * UVA_VALOR); // ~$2.636.867
-const UVA2_SALDO = Math.round(581.83  * UVA_VALOR); // ~$1.197.427
+// ══ DATOS REALES UVA — actualizados 10/08/2026 desde el banco ══
+// UVA1 (1.281,49 UVAs totales, 12/12 cuotas):
+//   Cuota 12 (última) vence 23/08/2026 → 121,80 UVAs — TERMINA SEP-26
+// UVA2 (581,83 UVAs totales, 18/18 cuotas):
+//   Cuota 7  vence 18/08/2026 → 41,08 UVAs  (ago)
+//   Cuota 8  vence 18/09/2026 → 40,92 UVAs  (sep)
+//   Cuota 9  vence 19/10/2026 → 40,74 UVAs  (oct)
+//   Cuota 10 vence 18/11/2026 → 40,58 UVAs  (nov)
+//   Cuota 11 vence 18/12/2026 → 40,41 UVAs  (dic)
+//   Cuotas 12–18 se proyectan con UVA ajustada por inflación
+const UVA_VALOR = 2057.99;  // BCRA al 31/07/2026
+// Cuotas UVA2 en UVAs (decrecientes por amortización):
+const UVA2_CUOTAS_UVA = [41.08, 40.92, 40.74, 40.58, 40.41, 40.25, 40.08, 39.92, 39.75, 39.59, 39.42, 39.25];
+// Función que devuelve la cuota UVA2 en pesos para el mes i (0=ago-26)
+// UVA sube ~0.7%/mes (inflación proyectada), por eso la cuota en pesos puede variar
+function uva2CuotaPesos(i){
+  const uvasEste = UVA2_CUOTAS_UVA[Math.min(i, UVA2_CUOTAS_UVA.length-1)] || 39.0;
+  const uvaProyectado = UVA_VALOR * Math.pow(1.007, i); // UVA crece con inflación
+  return Math.round(uvasEste * uvaProyectado);
+}
+const UVA1_CUOTA = Math.round(121.80 * UVA_VALOR); // ~$250.664 — cuota 12/12, termina SEP-26
+const UVA1 = UVA1_CUOTA;
+const UVA2 = Math.round(41.08 * UVA_VALOR); // ~$84.542 cuota actual (ago)
+const UVA1_SALDO = Math.round(121.80 * UVA_VALOR);        // saldo restante UVA1 = 1 cuota
+const UVA2_SALDO = Math.round(581.83 * UVA_VALOR);        // ~$1.197.427
 const MESES     = ['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
 const MESES_F   = ['Ago-26','Sep-26','Oct-26','Nov-26','Dic-26','Ene-27','Feb-27','Mar-27','Abr-27','May-27','Jun-27','Jul-27'];
 
@@ -867,10 +883,11 @@ function alq1(i){ const n=ADJ1.filter(x=>x<=i).length; return Math.round(D.alq1 
 function alq2(i){ const n=ADJ2.filter(x=>x<=i).length; return Math.round(D.alq2 * Math.pow(1+D.icl/100,n)); }
 function gfMes(i){
   const a1=alq1(i), a2=alq2(i);
-  // UVA1 (cuota 11/12 en ago → última cuota en SEP = idx 1, libre desde OCT = idx 2)
-  const uva1 = i<=1 ? UVA1 : 0;
-  // UVA2 (cuota 6/18 en ago → termina feb-28 = idx ~18)
-  const uva2 = i<=17 ? UVA2 : 0;
+  // UVA1: cuota 12/12 vence en ago (idx 0) → ÚLTIMA en sep (idx 1 del resumen, pero la pagamos en ago para sep)
+  // Técnicamente la última cuota cae en ago-26 (cuota 12, vto 23/08) → libre desde sep
+  const uva1 = i===0 ? UVA1 : 0;  // solo queda 1 cuota, en ago-26
+  // UVA2: cuotas reales decrecientes en UVAs, UVA sube con inflación
+  const uva2 = i <= 17 ? uva2CuotaPesos(i) : 0;
   const base = D.mercado + D.serv + D.cont + D.auto_ + D.mono + D.hijos + uva2;
   return { a1, a2, uva1, uva2, total: a1+a2+base+uva1 };
 }
@@ -1091,7 +1108,7 @@ function renderAlquiler(){
 }
 
 function setTDCScenario(sc){
-  const escenarios = { min:356000, med:500000, max:700000, cus: D.ptdc };
+  const escenarios = { min:300570, med:500000, max:700000, cus: D.ptdc };
   D.ptdc = escenarios[sc] || D.ptdc;
   document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('sc-active'));
   document.getElementById('sc-'+sc)?.classList.add('sc-active');
