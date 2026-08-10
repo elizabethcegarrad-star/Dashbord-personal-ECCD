@@ -1126,15 +1126,26 @@ function setTDCScenario(sc){
 // ══════════════════════════════════════════════
 function renderTDC(){
   const tem = D.tem/100;
-  let d=D.deuda, sds=[d], acs=[0], pa=0, ml=null, totalInt=0;
+  let d = D.deuda;
+  const sds=[d], acs=[0];
+  let pa=0, ml=null, totalInt=0;
   const ML=['Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
+
   for(let i=0;i<7;i++){
-    const int=d*tem; d+=int; totalInt+=int;
-    // Pago simple: lo que el usuario decide pagar cada mes
-    // UVA1 ya está como gasto fijo en gfMes, no se suma al pago TDC
-    const pr=Math.min(D.ptdc, d); d=Math.max(0,d-pr); pa+=pr;
+    const int = d * tem;
+    d += int; totalInt += int;
+    const gf  = gfMes(i);
+    const ing = netoReal() + D.pin;
+    const libre = ing - gf.total;
+    // Paga máximo posible: al menos el mínimo del slider, hasta cubrir la deuda
+    const pago = libre > 0
+      ? Math.min(Math.max(D.ptdc, libre), d)
+      : Math.min(D.ptdc, d);
+    const pr = Math.round(pago);
+    d = Math.max(0, d - pr); pa += pr;
     sds.push(Math.round(d)); acs.push(Math.round(pa));
-    if(d<=0&&!ml) ml=ML[i]; if(d<=0) break;
+    if(d<=0 && !ml) ml = ML[i];
+    if(d<=0) break;
   }
   while(sds.length<8){sds.push(0);acs.push(acs[acs.length-1]);}
 
@@ -1178,54 +1189,83 @@ function renderTDC(){
 // ══════════════════════════════════════════════
 // RENDER PROYECCIÓN 12M
 // ══════════════════════════════════════════════
+// RENDER PROYECCIÓN 12M — lógica correcta
+// ══════════════════════════════════════════════
 function renderProy(){
-  const tem=D.tem/100, pctA=D.pct_ahorro/100;
-  let deuda=D.deuda, ahorro=0;
-  const sds=[],sups=[],ahos=[],rows=[];
+  const tem = D.tem/100;
+  let deuda = D.deuda, ahorro = 0;
+  const sds=[], sups=[], ahos=[], rows=[];
 
-  // Cuotas TDC activas desde ago-26:
-  // COPPEL: termina sep-26 (1 cuota más, idx 1)
-  // NBA: termina oct-26 (3 cuotas más, idx 0,1,2)
-  // UVA1: ya la última cuota fue en ago-26 (idx 0) → libre desde sep (idx 1+)
-  // Pago TDC = lo que paga la usuaria + cuotas que vencen ese mes
-  function cuotasActivasMes(i){
-    let c = 0;
-    if(i<=0) c += 25206; // TOPMEGA última en ago (ya pasó pero contamos)
-    if(i<=1) c += 55069; // COPPEL: ago (10/12) y sep (11/12=última)
-    if(i<=2) c += 65555; // NBA: ago(7/9), sep(8/9), oct(9/9=última)
-    return c;
-  }
+  // MODELO:
+  // - ingreso − gastos_fijos = libre_post_GF (puede ser negativo si GF > ingreso)
+  // - si deuda > 0: paga al menos D.ptdc a TDC, o más si tiene libre
+  //   → pago = max(D.ptdc, libre) pero no más que la deuda
+  //   → superávit = libre − pago (negativo = está usando reservas para pagar TDC)
+  // - si deuda = 0: superávit = libre; ahorra % del superávit
 
   for(let i=0;i<12;i++){
-    const gf=gfMes(i);
-    const ing=netoReal()+D.pin;
-    const int=Math.round(deuda*tem); deuda+=int;
-    // El pago mínimo ya incluye las cuotas activas; solo aplicamos lo que el usuario paga
-    const pr=Math.min(D.ptdc, deuda > 0 ? deuda : 0);
-    deuda=Math.max(0,deuda-pr);
-    const sup=ing-gf.total-pr;
-    const ames=deuda===0?Math.max(0,Math.round(sup*pctA)):0;
-    ahorro+=ames;
-    rows.push({mes:MESES[i],ing,gf:gf.total,tdc:Math.round(pr),sup:Math.round(sup),deuda:Math.round(deuda),aho:Math.round(ahorro),aj1:ADJ1.includes(i),aj2:ADJ2.includes(i)});
-    sds.push(Math.round(deuda));sups.push(Math.max(0,Math.round(sup)));ahos.push(Math.round(ahorro));
+    const gf  = gfMes(i);
+    const ing = netoReal() + D.pin;
+    const libre = ing - gf.total;
+
+    // Intereses se acumulan sobre la deuda
+    const int = Math.round(deuda * tem);
+    deuda += int;
+
+    let pagado = 0, sup = 0, ames = 0;
+    if(deuda > 0){
+      // Paga lo máximo del libre, al menos el mínimo
+      pagado = Math.min(Math.max(D.ptdc, Math.max(0,libre)), deuda);
+      pagado = Math.round(pagado);
+      deuda  = Math.max(0, deuda - pagado);
+      sup    = Math.round(libre - pagado);
+    } else {
+      sup  = Math.round(libre);
+      ames = Math.max(0, Math.round(sup * D.pct_ahorro/100));
+      ahorro += ames;
+    }
+
+    rows.push({ mes:MESES[i], ing, gf:gf.total, libre:Math.round(libre),
+      tdc:pagado, sup, deuda:Math.round(deuda), aho:Math.round(ahorro),
+      aj1:ADJ1.includes(i), aj2:ADJ2.includes(i) });
+    sds.push(Math.round(deuda));
+    sups.push(Math.max(0,sup));
+    ahos.push(Math.round(ahorro));
   }
 
   rendChart('cProy',{type:'line',data:{labels:MESES,datasets:[
     {label:'Deuda TDC',data:sds,borderColor:'#D93025',backgroundColor:'rgba(217,48,37,.06)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:sds.map(v=>v===0?'#16A05C':'#D93025')},
-    {label:'Superávit',data:sups,borderColor:'#16A05C',fill:false,tension:0.3,pointRadius:3,borderDash:[5,4]},
+    {label:'Libre post-GF',data:rows.map(r=>Math.max(0,r.libre)),borderColor:'#16A05C',fill:false,tension:0.3,pointRadius:3,borderDash:[5,4]},
     {label:'Ahorro acum.',data:ahos,borderColor:'#1565C0',fill:false,tension:0.3,pointRadius:3},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>'$'+(Math.round(v/100000)/10)+'M',maxTicksLimit:5},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}});
 
-  let h=`<table style="min-width:680px;font-size:11px;">
-    <thead><tr><th>Mes</th><th>Ingreso</th><th>Gastos fijos</th><th>TDC</th><th>Superávit</th><th>Deuda TDC</th><th>Ahorro acum.</th><th>🚦</th></tr></thead><tbody>`;
+  // Nota clave para entender la proyección
+  const tdcCero = rows.find(r=>r.deuda===0);
+  const notaHtml = tdcCero
+    ? `<div class="alert ok" style="margin-bottom:10px"><span class="ico">✅</span><span>Con pago de <strong>${fmt(D.ptdc)}/mes</strong>, la TDC se cancela en <strong>${tdcCero.mes}</strong>. El "superávit negativo" en algunos meses no es una alarma: significa que el pago TDC usa parte de tu saldo de cuenta, no que gastes más de lo que ganás. Tu ingreso alcanza y está correctamente distribuido.</span></div>`
+    : `<div class="alert w" style="margin-bottom:10px"><span class="ico">⚠️</span><span>Con pago de <strong>${fmt(D.ptdc)}/mes</strong> la TDC no se cancela en 12 meses. Aumentá el pago mensual o usá el simulador de la pestaña TDC para ver distintos escenarios.</span></div>`;
+
+  let h=`${notaHtml}<table style="min-width:720px;font-size:11px;">
+    <thead><tr><th>Mes</th><th>Ingreso</th><th>Gastos fijos</th><th>Libre post-GF</th><th>Pago TDC</th><th>Superávit</th><th>Deuda TDC</th><th>Ahorro acum.</th><th>🚦</th></tr></thead><tbody>`;
   rows.forEach(r=>{
     const dz=r.deuda===0;
+    const libreC = r.libre>=0?'num-g':'num-r';
     const sc=r.sup>=0?'num-g':'num-r';
     const dc=dz?'num-g':'';
     const b1=r.aj1?'<span class="pill pill-b" style="font-size:8px">alq+</span>':'';
     const b2=r.aj2?'<span class="pill pill-w" style="font-size:8px">mam+</span>':'';
-    const sf=r.sup<0?'🔴':r.sup<100000?'🟡':'🟢';
-    h+=`<tr><td>${r.mes}${b1}${b2}${dz?'<span class="pill pill-g">✓</span>':''}</td><td>${fmt(r.ing)}</td><td>${fmt(r.gf)}</td><td>${fmt(r.tdc)}</td><td class="${sc}">${fmt(r.sup)}</td><td class="${dc}">${dz?'$0 ✓':fmt(r.deuda)}</td><td style="color:#1565C0;font-weight:600">${r.aho>0?fmt(r.aho):'—'}</td><td>${sf}</td></tr>`;
+    const sf=r.deuda>0?(r.libre<0?'🔴':'🟡'):'🟢';
+    h+=`<tr>
+      <td>${r.mes}${b1}${b2}${dz?'<span class="pill pill-g">✓</span>':''}</td>
+      <td>${fmt(r.ing)}</td>
+      <td>${fmt(r.gf)}</td>
+      <td class="${libreC}">${fmt(r.libre)}</td>
+      <td>${fmt(r.tdc)}</td>
+      <td class="${sc}">${fmt(r.sup)}</td>
+      <td class="${dc}">${dz?'$0 ✓':fmt(r.deuda)}</td>
+      <td style="color:#1565C0;font-weight:600">${r.aho>0?fmt(r.aho):'—'}</td>
+      <td>${sf}</td>
+    </tr>`;
   });
   h+='</tbody></table>';
   document.getElementById('tb-proy').innerHTML=h;
@@ -1235,10 +1275,24 @@ function renderProy(){
 // HELPERS COMPARTIDOS FONDOS
 // ══════════════════════════════════════════════
 function superavitPostDeuda(){
-  const neto = netoReal();
-  const ing  = neto + D.pin;
-  const gf   = gfMes(3); // nov-26 sin UVA1, con alquileres ajustados
-  return Math.max(0, ing - gf.total);
+  // Simula cuándo se cancela la TDC y qué queda libre desde ese mes en adelante
+  // Usamos el mismo modelo que renderProy
+  const tem = D.tem/100;
+  let d = D.deuda;
+  for(let i=0;i<24;i++){
+    d += d * tem;
+    const gf  = gfMes(i);
+    const ing = netoReal() + D.pin;
+    const libre = ing - gf.total;
+    const pago = libre > 0 ? Math.min(Math.max(D.ptdc, libre), d) : Math.min(D.ptdc, d);
+    d = Math.max(0, d - pago);
+    if(d <= 0){
+      // Desde el mes siguiente, el libre post-gastos es el superávit
+      const gfNext = gfMes(i+1);
+      return Math.max(0, (netoReal() + D.pin) - gfNext.total);
+    }
+  }
+  return 0;
 }
 
 function metaFE(){
